@@ -85,7 +85,7 @@
         button.action-small { padding: 8px 12px; font-size: 0.85rem; }
 
         /* Navegador de Rondas */
-        .round-nav { display: flex; overflow-x: auto; gap: 10px; padding: 15px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 15px 0; scrollbar-width: none; }
+        .round-nav { display: flex; overflow-x: auto; gap: 10px; padding: 15px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 15px 0 25px 0; scrollbar-width: none; }
         .round-nav::-webkit-scrollbar { display: none; }
         
         .nav-chip {
@@ -93,7 +93,6 @@
         }
         .nav-chip.active { background: var(--primary); color: #0f172a; border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
         
-        /* BOTÓN + ACTUAL MEJORADO */
         .nav-chip.new { 
             background: rgba(56, 189, 248, 0.15); 
             border: 2px dashed var(--primary); 
@@ -143,7 +142,7 @@
         }
 
         /* Tabla Excel */
-        .table-container { width: 100%; overflow-x: auto; margin-top: 25px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; margin-bottom: 25px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.95rem; }
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
         th { background: rgba(0,0,0,0.6); color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
@@ -183,6 +182,12 @@
         </div>
     </div>
 
+    <h3 style="margin-top: 10px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
+    <div class="table-container">
+        <table id="historyTable">
+            </table>
+    </div>
+
     <div class="round-nav" id="roundNav">
         </div>
 
@@ -196,12 +201,6 @@
 
     <div style="margin-top: 25px;" id="actionBtnContainer">
         </div>
-
-    <h3 style="margin-top: 40px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
-    <div class="table-container">
-        <table id="historyTable">
-            </table>
-    </div>
 
     <div id="loadModal" class="modal">
         <div class="modal-content">
@@ -249,7 +248,7 @@
             return total;
         }
 
-        // Modifica el puntaje total directamente calculando la diferencia matemática
+        // Modifica el puntaje total directamente
         function overrideTotalScore(playerId, newTotalValue) {
             const p = state.players.find(x => x.id === playerId);
             if (!p) return;
@@ -419,8 +418,10 @@
             const isCurrent = state.viewingRoundNum === state.currentRoundNum;
             const activePlayers = getActivePlayers(state.viewingRoundNum);
             
-            const dealerIndex = (state.viewingRoundNum - 1) % Math.max(1, activePlayers.length);
-            const cutterIndex = (dealerIndex - 1 + activePlayers.length) % Math.max(1, activePlayers.length);
+            const numActive = activePlayers.length;
+            const dealerIndex = (state.viewingRoundNum - 1) % Math.max(1, numActive);
+            const manoIndex = (dealerIndex + 1) % Math.max(1, numActive);
+            const cutterIndex = (dealerIndex - 1 + numActive) % Math.max(1, numActive);
 
             activePlayers.forEach((p, index) => {
                 const total = calculateTotal(p.id);
@@ -430,10 +431,18 @@
                 let classes = 'player-card';
                 if(isWinner) classes += ' winner'; else if(isLocked) classes += ' locked';
 
+                // Lógica de roles (Mezcla, Mano, Corta)
                 let role = 'Esperando Turno';
-                if(activePlayers.length > 1) {
-                    if(index === dealerIndex) role = '🎲 Mezcla y Reparte';
-                    else if(index === cutterIndex) role = '✂️ Corta';
+                if(numActive > 1) {
+                    if(index === dealerIndex) {
+                        role = '🎲 Mezcla y Reparte';
+                    } else {
+                        let rolesArr = [];
+                        if(index === cutterIndex) rolesArr.push('✂️ Corta');
+                        if(index === manoIndex) rolesArr.push('✋ Mano');
+                        
+                        if(rolesArr.length > 0) role = rolesArr.join(' y ');
+                    }
                 }
 
                 let inputValue = ''; let hasCut = false;
