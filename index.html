@@ -35,6 +35,17 @@
         .flex-between { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; }
         
         .config-sentence { color: #e2e8f0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 8px; font-weight: 500; }
+        
+        /* Ocultar flechas de inputs numéricos para un centrado perfecto */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+
         .inline-input {
             background: rgba(0,0,0,0.4); border: none; border-bottom: 2px solid var(--primary);
             color: var(--primary); font-weight: 900; font-size: 1.2rem; width: 75px; text-align: center;
@@ -48,12 +59,12 @@
         input.standard-input.missing { border-color: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); }
         input.standard-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-glow); }
         
-        input.ghost { background: transparent; border: 1px dashed transparent; color: #ffffff; font-weight: bold; font-size: inherit; width: 100%; text-align: center; padding: 4px; }
+        input.ghost { background: transparent; border: 1px dashed transparent; color: #ffffff; font-weight: bold; font-size: inherit; width: 100%; text-align: center; padding: 4px; transition: 0.2s; }
 
         input.total-score-input {
             background: transparent; border: 2px dashed transparent; color: #ffffff;
             font-size: 3.8rem; font-weight: 900; margin: 5px 0 10px 0; width: 100%; text-align: center;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.8); outline: none; border-radius: 8px; transition: 0.2s; padding: 0;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8); outline: none; border-radius: 8px; transition: 0.2s; padding: 0; display: block;
         }
 
         button {
@@ -310,7 +321,6 @@
                     role = 'Solo';
                 }
                 
-                // Si el rol está vacío, mantenemos el cuadro invisible para no romper la alineación
                 const visibilityStyle = role ? '' : 'visibility: hidden;';
                 const roleHtml = `<div class="role-badge" style="${visibilityStyle}">${role || '-'}</div>`;
 
@@ -319,11 +329,16 @@
 
                 if(!keepFocus) {
                     grid.innerHTML += `<div class="player-card ${tot >= state.config.win ? 'winner' : (tot >= state.config.lock ? 'locked' : '')}" id="card_${p.id}">
-                        <div class="flex-between"><input type="text" class="ghost" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)"><button class="danger action-small" onclick="removePlayer('${p.id}')">X</button></div>
+                        
+                        <div style="position: relative; width: 100%; height: 32px; margin-bottom: 5px;">
+                            <input type="text" class="ghost text-truncate" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; font-size: 1.5rem; padding: 0 40px; text-align: center;" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)">
+                            <button class="danger action-small" style="position: absolute; right: 0; top: 0; height: 100%; width: 32px; padding: 0; display: flex; align-items: center; justify-content: center;" onclick="removePlayer('${p.id}')">X</button>
+                        </div>
+                        
                         <input type="number" class="total-score-input" value="${tot}" onchange="overrideTotalScore('${p.id}',this.value)">
                         ${roleHtml}
                         <button class="cut-btn ${curCut ? 'active' : ''}" onclick="toggleCut('${p.id}','card_${p.id}')">${curCut ? 'Corte Perfecto (+50)' : 'Activar Corte'}</button>
-                        <input type="number" id="score_input_${p.id}" class="standard-input" placeholder="Puntos..." value="${curScore}" oninput="handleScoreInput('${p.id}',this.value)">
+                        <input type="number" id="score_input_${p.id}" class="standard-input" placeholder="puntos de esta ronda" value="${curScore}" oninput="handleScoreInput('${p.id}',this.value)">
                     </div>`;
                 } else { document.querySelector(`#card_${p.id} .total-score-input`).value = tot; }
             });
