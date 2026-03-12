@@ -2,7 +2,7 @@
   "name": "Rummy Pro",
   "short_name": "Rummy",
   "description": "Panel de puntuación Rummy",
-  "version": "0.2.9",
+  "version": "0.2.8",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -16,5 +16,4 @@
       "purpose": "any maskable"
     }
   ]
-
 }
