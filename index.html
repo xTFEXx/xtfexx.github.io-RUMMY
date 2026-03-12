@@ -29,11 +29,17 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
+        /* CANDADO 1: OVERSCROLL-BEHAVIOR EN HTML Y BODY */
+        html, body {
+            overscroll-behavior-y: none;
+            overscroll-behavior-x: none;
+            overscroll-behavior: none;
+        }
+
         body {
             background-color: var(--bg-base); color: var(--text-main);
             min-height: 100vh; padding: 15px; padding-bottom: 40px; overflow-x: hidden;
             position: relative;
-            overscroll-behavior-y: none;
         }
 
         /* --- ENCABEZADO MODIFICADO --- */
@@ -44,12 +50,11 @@
             margin-bottom: 20px; 
         }
         .header-logo { 
-            height: 4.4rem; /* Doble de tamaño */
+            height: 4.4rem; 
             width: 4.4rem; 
             margin-right: 15px; 
             border-radius: 8px; 
-            object-fit: contain; /* Contain ayuda a que no se corte si el logo no es cuadrado perfecto */
-            /* Fondo oscuro eliminado */
+            object-fit: contain; 
         }
         h1 { 
             color: var(--primary); 
@@ -241,7 +246,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.2.8</div>
+    <div id="watermark">xTFEXx - v1.0</div>
 
     <script>
         // REGISTRO DE SERVICE WORKER PARA PWA
@@ -250,6 +255,22 @@
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('SW no registrado', err));
             });
         }
+
+        // CANDADO 2: SCRIPT PARA BLOQUEAR EL GESTO DE RECARGA EN IPHONE (SAFARI)
+        let lastTouchY = 0;
+        document.addEventListener('touchstart', function(e) {
+            lastTouchY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function(e) {
+            const currentTouchY = e.touches[0].clientY;
+            // Si el usuario está scrolleando hacia abajo Estando en el top de la página
+            if (currentTouchY > lastTouchY && window.scrollY <= 0) {
+                // Previene que se dispare la acción de recarga del navegador
+                e.preventDefault();
+            }
+        }, { passive: false });
+
 
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1 };
         let liveInputs = { scores: {}, cuts: {} };
