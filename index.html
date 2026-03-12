@@ -128,8 +128,9 @@
 
     <div class="card-panel">
         <div class="flex-between" style="margin-bottom: 20px;">
-            <button onclick="saveGamePrompt()" class="outline-primary" style="flex:1;">Guardar Partida</button>
-            <button onclick="openLoadModal()" style="flex:1;">Gestionar Partidas</button>
+            <button onclick="saveGamePrompt()" class="outline-primary" style="flex:1; font-size: 0.85rem; padding: 12px 5px;">💾 Guardar</button>
+            <button onclick="openLoadModal()" class="outline-primary" style="flex:1; font-size: 0.85rem; padding: 12px 5px;">📂 Partidas</button>
+            <button onclick="resetGame()" class="outline-primary" style="flex:1; font-size: 0.85rem; padding: 12px 5px; color: var(--danger); border-color: var(--danger);">🔄 Reiniciar</button>
         </div>
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
@@ -283,6 +284,22 @@
             }
         }
 
+        function resetGame() {
+            if (state.players.length === 0) return alert("No hay jugadores en la partida para reiniciar.");
+            if (confirm("¿Estás seguro de reiniciar la partida?\n\nLos puntajes se pondrán a 0 y se borrarán todas las rondas, pero se mantendrán los jugadores en la mesa.")) {
+                state.rounds = [];
+                state.currentRoundNum = 1;
+                state.viewingRoundNum = 1;
+                liveInputs = { scores: {}, cuts: {} };
+                state.players.forEach(p => {
+                    p.baseScore = 0;
+                    p.joinRound = 1;
+                });
+                renderApp();
+            }
+        }
+
+        // ================= FLUJO DEL GANADOR =================
         function commitRound() {
             const activePlayers = state.players.filter(p => p.joinRound <= state.currentRoundNum);
             if(activePlayers.length < 2) return alert("Mínimo 2 jugadores.");
@@ -344,7 +361,8 @@
             }
 
             if (pendingWinnerAction.mode === 'commit') {
-                // Guardamos la ronda PRIMERO
+                
+                // 1. Guardamos la ronda con los datos ingresados
                 state.rounds.push({ 
                     id: state.currentRoundNum, 
                     scores: { ...liveInputs.scores }, 
@@ -352,18 +370,23 @@
                     winner: { ...tempWinner }
                 });
                 
-                // LIMPIAMOS variables temporales antes de calcular la victoria para evitar sumas dobles
+                // 2. Limpiamos variables temporales y avanzamos la ronda
+                // Hacer esto ANTES evita sumar los mismos puntos 2 veces en calculateTotal
                 liveInputs = { scores: {}, cuts: {} }; 
                 state.currentRoundNum++; 
                 state.viewingRoundNum = state.currentRoundNum;
                 
+                // 3. Calculamos si alguien ganó la partida en general
+                let winners = state.players.filter(p => calculateTotal(p.id) >= state.config.win);
+                winners.sort((a, b) => calculateTotal(b.id) - calculateTotal(a.id));
+                
                 closeModal('winnerModal');
                 renderApp();
 
-                // Ahora sí comprobamos de forma segura si alguien alcanzó el puntaje final
-                let winners = state.players.filter(p => calculateTotal(p.id) >= state.config.win);
+                // 4. Mostramos el mensaje si es que hay ganadores
                 if(winners.length > 0) {
-                    setTimeout(() => alert(`¡JUEGO TERMINADO!\nGanador/es: ${winners.map(w => w.name).join(', ')}`), 300);
+                    let winNames = winners.map(w => w.name).join(' > ');
+                    setTimeout(() => alert(`¡JUEGO TERMINADO!\nGanador/es: ${winNames}`), 300);
                 }
 
             } else if (pendingWinnerAction.mode === 'edit') {
@@ -374,6 +397,7 @@
                 renderApp();
             }
         }
+        // ================= FIN FLUJO DEL GANADOR =================
 
         function renderApp(keepFocus = false) {
             document.getElementById('cfgWin').value = state.config.win;
@@ -532,4 +556,3 @@
     </script>
 </body>
 </html>
-
