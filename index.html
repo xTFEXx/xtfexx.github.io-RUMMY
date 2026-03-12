@@ -363,7 +363,7 @@
                 // Ahora sí comprobamos de forma segura si alguien alcanzó el puntaje final
                 let winners = state.players.filter(p => calculateTotal(p.id) >= state.config.win);
                 if(winners.length > 0) {
-                    setTimeout(() => alert(`¡JUEGO TERMINADO!\nLlegaron al límite: ${winners.map(w => w.name).join(', ')}`), 300);
+                    setTimeout(() => alert(`¡JUEGO TERMINADO!\nGanador/es: ${winners.map(w => w.name).join(', ')}`), 300);
                 }
 
             } else if (pendingWinnerAction.mode === 'edit') {
@@ -532,3 +532,4 @@
     </script>
 </body>
 </html>
+
