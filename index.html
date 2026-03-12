@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RUMMY</title>
+    <title>Rummy Pro</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
-    <link rel="icon" type="image/png" href="icon-192.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
 
     <style>
         :root {
@@ -32,9 +33,34 @@
             background-color: var(--bg-base); color: var(--text-main);
             min-height: 100vh; padding: 15px; padding-bottom: 40px; overflow-x: hidden;
             position: relative;
+            overscroll-behavior-y: none;
         }
 
-        h1 { color: var(--primary); font-size: 2.2rem; text-align: center; letter-spacing: 4px; margin-bottom: 15px; text-shadow: 0 0 15px var(--primary-glow); font-weight: 900; }
+        /* --- ENCABEZADO MODIFICADO --- */
+        .header-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; 
+            margin-bottom: 20px; 
+        }
+        .header-logo { 
+            height: 4.4rem; /* Doble de tamaño */
+            width: 4.4rem; 
+            margin-right: 15px; 
+            border-radius: 8px; 
+            object-fit: contain; /* Contain ayuda a que no se corte si el logo no es cuadrado perfecto */
+            /* Fondo oscuro eliminado */
+        }
+        h1 { 
+            color: var(--primary); 
+            font-size: 2.2rem; 
+            letter-spacing: 2px; 
+            margin: 0; 
+            text-shadow: 0 0 15px var(--primary-glow); 
+            font-weight: 900; 
+        }
+        /* ----------------------------- */
+
         .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .card-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
@@ -145,7 +171,10 @@
 </head>
 <body>
 
-    <h1>RUMMY</h1>
+    <div class="header-container">
+        <img src="icon-512.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+        <h1>Rummy Pro</h1>
+    </div>
 
     <div class="card-panel">
         <div class="flex-between" style="margin-bottom: 20px;">
@@ -212,7 +241,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx</div>
+    <div id="watermark">xTFEXx - v0.2.8</div>
 
     <script>
         // REGISTRO DE SERVICE WORKER PARA PWA
