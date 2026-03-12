@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RUMMY</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <style>
         :root {
             --bg-base: #0f172a;
@@ -122,19 +128,18 @@
         
         .save-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); margin-bottom: 10px; border-radius: 8px; }
 
-        /* ESTILO MARCA DE AGUA */
         #watermark {
             position: fixed;
             bottom: 15px;
             right: 15px;
-            color: rgba(255, 255, 255, 0.08); /* Blanco casi transparente */
+            color: rgba(255, 255, 255, 0.08);
             font-size: 1.1rem;
             font-weight: 900;
             letter-spacing: 1px;
-            pointer-events: none; /* No interfiere con clics */
-            z-index: 10000; /* Siempre encima */
-            user-select: none; /* No se puede seleccionar el texto */
-            text-transform: none; /* Importante para mantener mayúsculas/minúsculas exactas */
+            pointer-events: none;
+            z-index: 10000;
+            user-select: none;
+            text-transform: none;
         }
     </style>
 </head>
@@ -196,15 +201,10 @@
     <div id="winnerModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--success); margin-bottom: 15px; text-align: center; font-size: 1.8rem; font-weight: 900;">Cierre de Ronda</h3>
-            
             <p style="text-align: center; margin-bottom: 10px; color: var(--text-muted); font-weight: bold;">¿Quién ganó esta ronda?</p>
-            <div id="winnerPlayerSelect" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;">
-                </div>
-
+            <div id="winnerPlayerSelect" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;"></div>
             <p style="text-align: center; margin-bottom: 10px; color: var(--text-muted); font-weight: bold;">¿De qué manera?</p>
-            <div id="winnerTypeSelect" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
-                </div>
-
+            <div id="winnerTypeSelect" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;"></div>
             <div style="display: flex; gap: 10px;">
                 <button class="danger" style="flex: 1;" onclick="closeModal('winnerModal')">Cancelar</button>
                 <button class="primary" style="flex: 2;" onclick="confirmWinner()">Confirmar</button>
@@ -215,9 +215,15 @@
     <div id="watermark">xTFEXx</div>
 
     <script>
+        // REGISTRO DE SERVICE WORKER PARA PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW no registrado', err));
+            });
+        }
+
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1 };
         let liveInputs = { scores: {}, cuts: {} };
-        
         let pendingWinnerAction = { mode: '', roundId: null };
         let tempWinner = { id: null, type: 'normal', points: 50 };
 
@@ -309,15 +315,11 @@
                 state.currentRoundNum = 1;
                 state.viewingRoundNum = 1;
                 liveInputs = { scores: {}, cuts: {} };
-                state.players.forEach(p => {
-                    p.baseScore = 0;
-                    p.joinRound = 1;
-                });
+                state.players.forEach(p => { p.baseScore = 0; p.joinRound = 1; });
                 renderApp();
             }
         }
 
-        // ================= FLUJO DEL GANADOR =================
         function commitRound() {
             const activePlayers = state.players.filter(p => p.joinRound <= state.currentRoundNum);
             if(activePlayers.length < 2) return alert("Mínimo 2 jugadores.");
@@ -328,27 +330,23 @@
                 activePlayers.forEach(p => { const i = document.getElementById(`score_input_${p.id}`); if (liveInputs.scores[p.id] === undefined) i.classList.add('missing'); else i.classList.remove('missing'); });
                 return;
             }
-
             openWinnerModal('commit', null);
         }
 
         function openWinnerModal(mode, roundId) {
             pendingWinnerAction = { mode, roundId };
-            
             if (mode === 'edit') {
                 const r = state.rounds.find(x => x.id === roundId);
                 tempWinner = r && r.winner ? { ...r.winner } : { id: null, type: 'normal', points: 50 };
             } else {
                 tempWinner = { id: null, type: 'normal', points: 50 };
             }
-
             renderWinnerModalUI();
             document.getElementById('winnerModal').classList.add('active');
         }
 
         function renderWinnerModalUI() {
             const activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
-            
             const pContainer = document.getElementById('winnerPlayerSelect');
             pContainer.innerHTML = '';
             activePlayers.forEach(p => {
@@ -359,13 +357,7 @@
 
             const tContainer = document.getElementById('winnerTypeSelect');
             tContainer.innerHTML = '';
-            
-            const types = [
-                { id: 'normal', name: 'Normal', pts: 50 },
-                { id: 'doblete', name: 'Doblete', pts: 100 },
-                { id: 'tripilla', name: 'Tripilla', pts: 200 }
-            ];
-            
+            const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: #0f172a; border-color: var(--primary);' : '';
@@ -374,48 +366,31 @@
         }
 
         function confirmWinner() {
-            if (!tempWinner.id) {
-                return alert('Por favor, selecciona al jugador que ganó esta ronda.');
-            }
+            if (!tempWinner.id) return alert('Por favor, selecciona al jugador que ganó esta ronda.');
 
             if (pendingWinnerAction.mode === 'commit') {
-                
-                // 1. Guardamos la ronda con los datos ingresados
-                state.rounds.push({ 
-                    id: state.currentRoundNum, 
-                    scores: { ...liveInputs.scores }, 
-                    cuts: { ...liveInputs.cuts },
-                    winner: { ...tempWinner }
-                });
-                
-                // 2. Limpiamos variables temporales y avanzamos la ronda
-                // Hacer esto ANTES evita sumar los mismos puntos 2 veces en calculateTotal
+                state.rounds.push({ id: state.currentRoundNum, scores: { ...liveInputs.scores }, cuts: { ...liveInputs.cuts }, winner: { ...tempWinner } });
                 liveInputs = { scores: {}, cuts: {} }; 
                 state.currentRoundNum++; 
                 state.viewingRoundNum = state.currentRoundNum;
                 
-                // 3. Calculamos si alguien ganó la partida en general
                 let winners = state.players.filter(p => calculateTotal(p.id) >= state.config.win);
                 winners.sort((a, b) => calculateTotal(b.id) - calculateTotal(a.id));
                 
                 closeModal('winnerModal');
                 renderApp();
 
-                // 4. Mostramos el mensaje si es que hay ganadores
                 if(winners.length > 0) {
                     let winNames = winners.map(w => w.name).join(' > ');
                     setTimeout(() => alert(`¡JUEGO TERMINADO!\nGanador/es: ${winNames}`), 300);
                 }
-
             } else if (pendingWinnerAction.mode === 'edit') {
                 const r = state.rounds.find(x => x.id === pendingWinnerAction.roundId);
                 if (r) r.winner = { ...tempWinner };
-                
                 closeModal('winnerModal');
                 renderApp();
             }
         }
-        // ================= FIN FLUJO DEL GANADOR =================
 
         function renderApp(keepFocus = false) {
             document.getElementById('cfgWin').value = state.config.win;
@@ -438,21 +413,14 @@
             const isCurrent = state.viewingRoundNum === state.currentRoundNum;
             const activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
             
-            if (isCurrent) {
-                bannerCont.innerHTML = '';
-            } else {
+            if (isCurrent) bannerCont.innerHTML = '';
+            else {
                 const r = state.rounds.find(x => x.id === state.viewingRoundNum);
                 if (r && r.winner && r.winner.id) {
                     const wName = state.players.find(p => p.id === r.winner.id)?.name || '?';
-                    bannerCont.innerHTML = `<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 12px; border-radius: var(--radius); text-align: center;">
-                        <span style="color: var(--success); font-weight: bold;">🏆 Ganador de la ronda: ${wName} (${r.winner.type.toUpperCase()} +${r.winner.points})</span>
-                        <button class="outline-primary action-small" style="margin: 10px auto 0 auto;" onclick="openWinnerModal('edit', ${state.viewingRoundNum})">✏️ Cambiar Victoria</button>
-                    </div>`;
+                    bannerCont.innerHTML = `<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 12px; border-radius: var(--radius); text-align: center;"><span style="color: var(--success); font-weight: bold;">🏆 Ganador de la ronda: ${wName} (${r.winner.type.toUpperCase()} +${r.winner.points})</span><button class="outline-primary action-small" style="margin: 10px auto 0 auto;" onclick="openWinnerModal('edit', ${state.viewingRoundNum})">✏️ Cambiar Victoria</button></div>`;
                 } else {
-                    bannerCont.innerHTML = `<div style="background: rgba(255, 255, 255, 0.05); border: 1px dashed var(--text-muted); padding: 12px; border-radius: var(--radius); text-align: center;">
-                        <span style="color: var(--text-muted);">Sin victoria registrada</span>
-                        <button class="outline-primary action-small" style="margin: 10px auto 0 auto;" onclick="openWinnerModal('edit', ${state.viewingRoundNum})">✏️ Asignar Ganador</button>
-                    </div>`;
+                    bannerCont.innerHTML = `<div style="background: rgba(255, 255, 255, 0.05); border: 1px dashed var(--text-muted); padding: 12px; border-radius: var(--radius); text-align: center;"><span style="color: var(--text-muted);">Sin victoria registrada</span><button class="outline-primary action-small" style="margin: 10px auto 0 auto;" onclick="openWinnerModal('edit', ${state.viewingRoundNum})">✏️ Asignar Ganador</button></div>`;
                 }
             }
 
@@ -462,7 +430,6 @@
 
             activePlayers.forEach((p, idx) => {
                 const tot = calculateTotal(p.id);
-                
                 let role = '';
                 const isCutter = activePlayers.length > 1 && idx === cutter;
 
@@ -474,21 +441,17 @@
                 }
                 
                 const roleHtml = `<div class="role-badge" style="${role ? '' : 'visibility: hidden;'}">${role || '-'}</div>`;
-                
                 const curScore = isCurrent ? (liveInputs.scores[p.id] !== undefined ? liveInputs.scores[p.id] : '') : (state.rounds.find(r => r.id === state.viewingRoundNum)?.scores[p.id] ?? '');
                 const curCut = isCurrent ? !!liveInputs.cuts[p.id] : !!state.rounds.find(r => r.id === state.viewingRoundNum)?.cuts[p.id];
-
                 const cutVisibility = isCutter ? '' : 'visibility: hidden;';
                 const cutHtml = `<button class="cut-btn ${curCut ? 'active' : ''}" style="${cutVisibility}" onclick="toggleCut('${p.id}','card_${p.id}')">${curCut ? 'Corte Perfecto Activado (+50)' : 'Corte Perfecto'}</button>`;
 
                 if(!keepFocus) {
                     grid.innerHTML += `<div class="player-card ${tot >= state.config.win ? 'winner' : (tot >= state.config.lock ? 'locked' : '')}" id="card_${p.id}">
-                        
                         <div style="position: relative; width: 100%; height: 32px; margin-bottom: 5px;">
                             <input type="text" class="ghost text-truncate" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; font-size: 1.5rem; padding: 0 40px; text-align: center;" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)">
                             <button class="danger action-small" style="position: absolute; right: 0; top: 0; height: 100%; width: 32px; padding: 0; display: flex; align-items: center; justify-content: center;" onclick="removePlayer('${p.id}')">X</button>
                         </div>
-                        
                         <input type="number" class="total-score-input" value="${tot}" onchange="overrideTotalScore('${p.id}',this.value)">
                         ${roleHtml}
                         ${cutHtml}
@@ -512,9 +475,7 @@
             state.rounds.forEach(r => {
                 h += `<tr class="${r.id === state.viewingRoundNum ? 'highlight-row' : ''}"><td onclick="state.viewingRoundNum=${r.id};renderApp()">R${r.id} ✏️</td>`;
                 state.players.forEach(p => {
-                    if (p.joinRound > r.id) {
-                        h += `<td>-</td>`;
-                    } else {
+                    if (p.joinRound > r.id) { h += `<td>-</td>`; } else {
                         const pts = r.scores[p.id] ?? 0;
                         const cutStr = r.cuts[p.id] ? ` <small style="color:var(--warning); font-weight:bold;">(+50)</small>` : '';
                         const winStr = (r.winner && r.winner.id === p.id) ? `<div style="color:var(--success); font-size:0.8rem; font-weight:900; margin-top:3px;">🏆 +${r.winner.points}</div>` : '';
@@ -523,19 +484,14 @@
                 });
                 h += `</tr>`;
             });
-            
-            // Neon suavizado a 3px
-            h += `</tbody><tfoot><tr style="background: rgba(0,0,0,0.6); font-weight:900; font-size:1.15rem;">
-                <td style="color:var(--primary)">TOTAL</td>`;
+            h += `</tbody><tfoot><tr style="background: rgba(0,0,0,0.6); font-weight:900; font-size:1.15rem;"><td style="color:var(--primary)">TOTAL</td>`;
             state.players.forEach(p => {
                 const tot = calculateTotal(p.id);
                 let col = '#ffffff';
-                if(tot >= state.config.win) col = 'var(--success)';
-                else if(tot >= state.config.lock) col = 'var(--danger)';
+                if(tot >= state.config.win) col = 'var(--success)'; else if(tot >= state.config.lock) col = 'var(--danger)';
                 h += `<td style="color:${col}; text-shadow: 0 0 3px ${col !== '#ffffff' ? col : 'transparent'};">${tot}</td>`;
             });
             h += `</tr></tfoot>`;
-            
             table.innerHTML = h;
         }
 
@@ -549,9 +505,7 @@
         }
         function openLoadModal() {
             const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
-            Object.keys(saves).forEach(k => {
-                list.innerHTML += `<div class="save-item"><span class="text-truncate">${k}</span><div style="display:flex;gap:5px"><button class="primary action-small" onclick="loadGame('${k}')">Cargar</button><button class="outline-primary action-small" onclick="exportSingleSave('${k}')">💾</button><button class="danger action-small" onclick="deleteSave('${k}')">🗑️</button></div></div>`;
-            });
+            Object.keys(saves).forEach(k => { list.innerHTML += `<div class="save-item"><span class="text-truncate">${k}</span><div style="display:flex;gap:5px"><button class="primary action-small" onclick="loadGame('${k}')">Cargar</button><button class="outline-primary action-small" onclick="exportSingleSave('${k}')">💾</button><button class="danger action-small" onclick="deleteSave('${k}')">🗑️</button></div></div>`; });
             document.getElementById('loadModal').classList.add('active');
         }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
