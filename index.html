@@ -36,15 +36,8 @@
         
         .config-sentence { color: #e2e8f0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 8px; font-weight: 500; }
         
-        /* Ocultar flechas de inputs numéricos para un centrado perfecto */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield; /* Firefox */
-        }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
 
         .inline-input {
             background: rgba(0,0,0,0.4); border: none; border-bottom: 2px solid var(--primary);
@@ -64,7 +57,7 @@
         input.total-score-input {
             background: transparent; border: 2px dashed transparent; color: #ffffff;
             font-size: 3.8rem; font-weight: 900; margin: 5px 0 10px 0; width: 100%; text-align: center;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.8); outline: none; border-radius: 8px; transition: 0.2s; padding: 0; display: block;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8); outline: none; border-radius: 8px; transition: color 0.3s ease, text-shadow 0.3s ease, border-color 0.2s ease, background 0.2s ease; padding: 0; display: block;
         }
 
         button {
@@ -88,7 +81,7 @@
         .nav-chip.active { background: var(--primary); color: #0f172a; border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
         .nav-chip.new { background: rgba(56, 189, 248, 0.15); border: 2px dashed var(--primary); color: #ffffff; }
 
-        #viewTitleContainer { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        #viewTitleContainer { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
 
         .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
         @media (min-width: 600px) { .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); } }
@@ -98,8 +91,12 @@
             padding: 18px; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden;
             transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
+        
         .player-card.locked { border-color: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        .player-card.locked input.total-score-input { color: var(--danger); text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+        
         .player-card.winner { border-color: var(--success); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
+        .player-card.winner input.total-score-input { color: var(--success); text-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
 
         .role-badge { font-size: 0.9rem; font-weight: 800; padding: 8px 10px; border-radius: 6px; width: 100%; text-align: center; background: rgba(0, 0, 0, 0.6); color: var(--warning); margin-bottom: 12px; min-height: 32px; border: 1px solid rgba(245, 158, 11, 0.3);}
         
@@ -123,7 +120,6 @@
         .modal-content { background: var(--surface); border: 2px solid var(--primary); padding: 25px; border-radius: var(--radius); width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         
         .save-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); margin-bottom: 10px; border-radius: 8px; }
-        .save-actions { display: flex; gap: 5px; }
     </style>
 </head>
 <body>
@@ -161,6 +157,8 @@
     <div id="viewTitleContainer">
         <h2 id="viewTitle" style="text-align: center; font-size: 1.4rem; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px;"></h2>
     </div>
+
+    <div id="pastRoundBannerContainer"></div>
     
     <div class="grid" id="playersGrid"></div>
 
@@ -173,7 +171,26 @@
             <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 10px;">
                 <button class="outline-primary" style="width: 100%; margin-bottom: 10px;" onclick="document.getElementById('importFile').click()">⬆️ Subir Archivo (.json)</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importSingleSave(event)">
-                <button onclick="closeModal()" class="danger" style="width: 100%; padding: 12px;">Cerrar</button>
+                <button onclick="closeModal('loadModal')" class="danger" style="width: 100%; padding: 12px;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winnerModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: var(--success); margin-bottom: 15px; text-align: center; font-size: 1.8rem; font-weight: 900;">Cierre de Ronda</h3>
+            
+            <p style="text-align: center; margin-bottom: 10px; color: var(--text-muted); font-weight: bold;">¿Quién ganó esta ronda?</p>
+            <div id="winnerPlayerSelect" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;">
+                </div>
+
+            <p style="text-align: center; margin-bottom: 10px; color: var(--text-muted); font-weight: bold;">¿De qué manera?</p>
+            <div id="winnerTypeSelect" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+                </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="danger" style="flex: 1;" onclick="closeModal('winnerModal')">Cancelar</button>
+                <button class="primary" style="flex: 2;" onclick="confirmWinner()">Confirmar</button>
             </div>
         </div>
     </div>
@@ -181,6 +198,9 @@
     <script>
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1 };
         let liveInputs = { scores: {}, cuts: {} };
+        
+        let pendingWinnerAction = { mode: '', roundId: null };
+        let tempWinner = { id: null, type: 'normal', points: 50 };
 
         window.onload = () => renderApp();
 
@@ -194,6 +214,7 @@
             state.rounds.forEach(r => {
                 if (r.scores[playerId] !== undefined) total += parseInt(r.scores[playerId]) || 0;
                 if (r.cuts[playerId]) total += 50;
+                if (r.winner && r.winner.id === playerId) total += r.winner.points;
             });
             if (state.viewingRoundNum === state.currentRoundNum) {
                 if (liveInputs.scores[playerId] !== undefined) total += parseInt(liveInputs.scores[playerId]) || 0;
@@ -273,17 +294,85 @@
                 return;
             }
 
-            state.rounds.push({ id: state.currentRoundNum, scores: { ...liveInputs.scores }, cuts: { ...liveInputs.cuts } });
+            openWinnerModal('commit', null);
+        }
+
+        function openWinnerModal(mode, roundId) {
+            pendingWinnerAction = { mode, roundId };
             
-            let winners = state.players.filter(p => calculateTotal(p.id) >= state.config.win);
-            if(winners.length > 0) {
-                renderApp();
-                setTimeout(() => alert(`¡JUEGO TERMINADO!\nGanadores: ${winners.map(w => w.name).join(', ')}`), 200);
-                return;
+            if (mode === 'edit') {
+                const r = state.rounds.find(x => x.id === roundId);
+                tempWinner = r && r.winner ? { ...r.winner } : { id: null, type: 'normal', points: 50 };
+            } else {
+                tempWinner = { id: null, type: 'normal', points: 50 };
             }
 
-            liveInputs = { scores: {}, cuts: {} }; state.currentRoundNum++; state.viewingRoundNum = state.currentRoundNum;
-            renderApp();
+            renderWinnerModalUI();
+            document.getElementById('winnerModal').classList.add('active');
+        }
+
+        function renderWinnerModalUI() {
+            const activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+            
+            const pContainer = document.getElementById('winnerPlayerSelect');
+            pContainer.innerHTML = '';
+            activePlayers.forEach(p => {
+                const isSelected = tempWinner.id === p.id;
+                const activeStyle = isSelected ? 'background: var(--primary); color: #0f172a; border-color: var(--primary);' : '';
+                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">${p.name}</button>`;
+            });
+
+            const tContainer = document.getElementById('winnerTypeSelect');
+            tContainer.innerHTML = '';
+            
+            const types = [
+                { id: 'normal', name: 'Normal', pts: 50 },
+                { id: 'doblete', name: 'Doblete', pts: 100 },
+                { id: 'tripilla', name: 'Tripilla', pts: 200 }
+            ];
+            
+            types.forEach(t => {
+                const isSelected = tempWinner.type === t.id;
+                const activeStyle = isSelected ? 'background: var(--primary); color: #0f172a; border-color: var(--primary);' : '';
+                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+            });
+        }
+
+        function confirmWinner() {
+            if (!tempWinner.id) {
+                return alert('Por favor, selecciona al jugador que ganó esta ronda.');
+            }
+
+            if (pendingWinnerAction.mode === 'commit') {
+                // Guardamos la ronda PRIMERO
+                state.rounds.push({ 
+                    id: state.currentRoundNum, 
+                    scores: { ...liveInputs.scores }, 
+                    cuts: { ...liveInputs.cuts },
+                    winner: { ...tempWinner }
+                });
+                
+                // LIMPIAMOS variables temporales antes de calcular la victoria para evitar sumas dobles
+                liveInputs = { scores: {}, cuts: {} }; 
+                state.currentRoundNum++; 
+                state.viewingRoundNum = state.currentRoundNum;
+                
+                closeModal('winnerModal');
+                renderApp();
+
+                // Ahora sí comprobamos de forma segura si alguien alcanzó el puntaje final
+                let winners = state.players.filter(p => calculateTotal(p.id) >= state.config.win);
+                if(winners.length > 0) {
+                    setTimeout(() => alert(`¡JUEGO TERMINADO!\nLlegaron al límite: ${winners.map(w => w.name).join(', ')}`), 300);
+                }
+
+            } else if (pendingWinnerAction.mode === 'edit') {
+                const r = state.rounds.find(x => x.id === pendingWinnerAction.roundId);
+                if (r) r.winner = { ...tempWinner };
+                
+                closeModal('winnerModal');
+                renderApp();
+            }
         }
 
         function renderApp(keepFocus = false) {
@@ -301,9 +390,30 @@
 
         function renderCards(keepFocus) {
             const grid = document.getElementById('playersGrid');
+            const bannerCont = document.getElementById('pastRoundBannerContainer');
+            
             if(!keepFocus) grid.innerHTML = '';
             const isCurrent = state.viewingRoundNum === state.currentRoundNum;
             const activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+            
+            if (isCurrent) {
+                bannerCont.innerHTML = '';
+            } else {
+                const r = state.rounds.find(x => x.id === state.viewingRoundNum);
+                if (r && r.winner && r.winner.id) {
+                    const wName = state.players.find(p => p.id === r.winner.id)?.name || '?';
+                    bannerCont.innerHTML = `<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 12px; border-radius: var(--radius); text-align: center;">
+                        <span style="color: var(--success); font-weight: bold;">🏆 Ganador de la ronda: ${wName} (${r.winner.type.toUpperCase()} +${r.winner.points})</span>
+                        <button class="outline-primary action-small" style="margin: 10px auto 0 auto;" onclick="openWinnerModal('edit', ${state.viewingRoundNum})">✏️ Cambiar Victoria</button>
+                    </div>`;
+                } else {
+                    bannerCont.innerHTML = `<div style="background: rgba(255, 255, 255, 0.05); border: 1px dashed var(--text-muted); padding: 12px; border-radius: var(--radius); text-align: center;">
+                        <span style="color: var(--text-muted);">Sin victoria registrada</span>
+                        <button class="outline-primary action-small" style="margin: 10px auto 0 auto;" onclick="openWinnerModal('edit', ${state.viewingRoundNum})">✏️ Asignar Ganador</button>
+                    </div>`;
+                }
+            }
+
             const dealer = (state.viewingRoundNum - 1) % Math.max(1, activePlayers.length);
             const mano = (dealer + 1) % Math.max(1, activePlayers.length);
             const cutter = (dealer - 1 + activePlayers.length) % Math.max(1, activePlayers.length);
@@ -312,20 +422,22 @@
                 const tot = calculateTotal(p.id);
                 
                 let role = '';
+                const isCutter = activePlayers.length > 1 && idx === cutter;
+
                 if (activePlayers.length > 1) {
                     if (idx === dealer) role = '🎲 Mezcla y Reparte';
                     else if (idx === cutter && idx === mano) role = '✂️ Corta y ✋ Mano';
                     else if (idx === cutter) role = '✂️ Corta';
                     else if (idx === mano) role = '✋ Mano';
-                } else {
-                    role = 'Solo';
                 }
                 
-                const visibilityStyle = role ? '' : 'visibility: hidden;';
-                const roleHtml = `<div class="role-badge" style="${visibilityStyle}">${role || '-'}</div>`;
-
+                const roleHtml = `<div class="role-badge" style="${role ? '' : 'visibility: hidden;'}">${role || '-'}</div>`;
+                
                 const curScore = isCurrent ? (liveInputs.scores[p.id] !== undefined ? liveInputs.scores[p.id] : '') : (state.rounds.find(r => r.id === state.viewingRoundNum)?.scores[p.id] ?? '');
                 const curCut = isCurrent ? !!liveInputs.cuts[p.id] : !!state.rounds.find(r => r.id === state.viewingRoundNum)?.cuts[p.id];
+
+                const cutVisibility = isCutter ? '' : 'visibility: hidden;';
+                const cutHtml = `<button class="cut-btn ${curCut ? 'active' : ''}" style="${cutVisibility}" onclick="toggleCut('${p.id}','card_${p.id}')">${curCut ? 'Corte Perfecto Activado (+50)' : 'Corte Perfecto'}</button>`;
 
                 if(!keepFocus) {
                     grid.innerHTML += `<div class="player-card ${tot >= state.config.win ? 'winner' : (tot >= state.config.lock ? 'locked' : '')}" id="card_${p.id}">
@@ -337,20 +449,51 @@
                         
                         <input type="number" class="total-score-input" value="${tot}" onchange="overrideTotalScore('${p.id}',this.value)">
                         ${roleHtml}
-                        <button class="cut-btn ${curCut ? 'active' : ''}" onclick="toggleCut('${p.id}','card_${p.id}')">${curCut ? 'Corte Perfecto (+50)' : 'Activar Corte'}</button>
+                        ${cutHtml}
                         <input type="number" id="score_input_${p.id}" class="standard-input" placeholder="puntos de esta ronda" value="${curScore}" oninput="handleScoreInput('${p.id}',this.value)">
                     </div>`;
-                } else { document.querySelector(`#card_${p.id} .total-score-input`).value = tot; }
+                } else { 
+                    document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
+                    const cardEl = document.getElementById(`card_${p.id}`);
+                    cardEl.classList.remove('winner', 'locked');
+                    if (tot >= state.config.win) cardEl.classList.add('winner');
+                    else if (tot >= state.config.lock) cardEl.classList.add('locked');
+                }
             });
             document.getElementById('actionBtnContainer').innerHTML = isCurrent ? `<button class="primary" onclick="commitRound()">Siguiente Ronda →</button>` : `<div style="display:flex;gap:10px;"><button class="outline-primary" style="flex:2" onclick="state.viewingRoundNum=${state.currentRoundNum};renderApp()">Volver a Actual</button><button class="danger" style="flex:1" onclick="deleteRound(${state.viewingRoundNum})">🗑️ Borrar R${state.viewingRoundNum}</button></div>`;
         }
 
         function renderTable() {
             const table = document.getElementById('historyTable');
-            if(!state.players.length) return table.innerHTML = '<tr><td>Sin jugadores</td></tr>';
+            if(!state.players.length) return table.innerHTML = '<tr><td style="padding:15px; color:var(--text-muted);">Sin jugadores</td></tr>';
             let h = `<thead><tr><th>Ronda</th>${state.players.map(p => `<th>${p.name}</th>`).join('')}</tr></thead><tbody>`;
-            state.rounds.forEach(r => h += `<tr class="${r.id === state.viewingRoundNum ? 'highlight-row' : ''}"><td onclick="state.viewingRoundNum=${r.id};renderApp()">R${r.id} ✏️</td>${state.players.map(p => `<td>${p.joinRound > r.id ? '-' : (r.scores[p.id] ?? 0) + (r.cuts[p.id] ? ' <small>(+50)</small>' : '')}</td>`).join('')}</tr>`);
-            h += `</tbody><tfoot><tr><td>TOTAL</td>${state.players.map(p => `<td>${calculateTotal(p.id)}</td>`).join('')}</tr></tfoot>`;
+            state.rounds.forEach(r => {
+                h += `<tr class="${r.id === state.viewingRoundNum ? 'highlight-row' : ''}"><td onclick="state.viewingRoundNum=${r.id};renderApp()">R${r.id} ✏️</td>`;
+                state.players.forEach(p => {
+                    if (p.joinRound > r.id) {
+                        h += `<td>-</td>`;
+                    } else {
+                        const pts = r.scores[p.id] ?? 0;
+                        const cutStr = r.cuts[p.id] ? ` <small style="color:var(--warning); font-weight:bold;">(+50)</small>` : '';
+                        const winStr = (r.winner && r.winner.id === p.id) ? `<div style="color:var(--success); font-size:0.8rem; font-weight:900; margin-top:3px;">🏆 +${r.winner.points}</div>` : '';
+                        h += `<td>${pts}${cutStr}${winStr}</td>`;
+                    }
+                });
+                h += `</tr>`;
+            });
+            
+            // Neon suavizado a 3px
+            h += `</tbody><tfoot><tr style="background: rgba(0,0,0,0.6); font-weight:900; font-size:1.15rem;">
+                <td style="color:var(--primary)">TOTAL</td>`;
+            state.players.forEach(p => {
+                const tot = calculateTotal(p.id);
+                let col = '#ffffff';
+                if(tot >= state.config.win) col = 'var(--success)';
+                else if(tot >= state.config.lock) col = 'var(--danger)';
+                h += `<td style="color:${col}; text-shadow: 0 0 3px ${col !== '#ffffff' ? col : 'transparent'};">${tot}</td>`;
+            });
+            h += `</tr></tfoot>`;
+            
             table.innerHTML = h;
         }
 
@@ -369,8 +512,8 @@
             });
             document.getElementById('loadModal').classList.add('active');
         }
-        function closeModal() { document.getElementById('loadModal').classList.remove('active'); }
-        function loadGame(key) { const s = getSaves(); if(s[key] && confirm(`¿Cargar "${key}"?`)) { state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {} }; closeModal(); renderApp(); } }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function loadGame(key) { const s = getSaves(); if(s[key] && confirm(`¿Cargar "${key}"?`)) { state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {} }; closeModal('loadModal'); renderApp(); } }
         function deleteSave(key) { if(confirm(`¿Eliminar "${key}"?`)) { const s = getSaves(); delete s[key]; localStorage.setItem('rummyProSaves', JSON.stringify(s)); openLoadModal(); } }
         function exportSingleSave(key) {
             const s = getSaves(); const blob = new Blob([JSON.stringify({ [key]: s[key] })], { type: "application/json" });
