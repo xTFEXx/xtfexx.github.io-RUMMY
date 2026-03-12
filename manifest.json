@@ -1,8 +1,8 @@
 {
   "name": "Rummy Pro",
   "short_name": "Rummy",
-  "description": "Panel de puntuación para Rummy",
-  "start_url": "./rummy.html",
+  "description": "Panel de puntuación Rummy",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
