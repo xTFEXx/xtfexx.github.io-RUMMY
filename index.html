@@ -85,7 +85,9 @@
 
         #viewTitleContainer { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
 
+        /* GRID RESPONSIVO MEJORADO PARA MODO HORIZONTAL */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        @media (min-width: 480px) and (max-width: 799px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
         @media (min-width: 800px) { .grid { grid-template-columns: repeat(5, 1fr); gap: 15px; } }
 
         @keyframes slideInForward { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
@@ -133,7 +135,6 @@
         .modal-content { background: var(--surface); border: 2px solid var(--primary); padding: 25px; border-radius: var(--radius); width: 100%; max-width: 500px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); max-height: 90vh; display: flex; flex-direction: column; animation: dropBounce 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         .scrollable-list { flex: 1; overflow-y: auto; min-height: 0; overscroll-behavior: contain; padding-right: 5px; }
         
-        /* PODIO Y ANIMACIONES */
         #podiumContainer { display: flex; justify-content: center; align-items: flex-end; gap: 10px; height: 250px; margin-bottom: 25px; overflow: hidden; padding-top: 10px;}
         .podium-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 30%; height: 100%; transform: translateY(100%); animation: slideUpPodium 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         .podium-wrapper.p1 { animation-delay: 0.1s; z-index: 3; }
@@ -276,21 +277,18 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.4.8</div>
+    <div id="watermark">xTFEXx - v0.4.9</div>
 
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    // Si ya hay un SW en espera (Actualización pendiente al entrar)
                     if (reg.waiting) {
                         if (confirm("✨ ¡Hay una nueva versión de Rummy Pro disponible! ¿Deseas actualizar ahora?")) {
                             reg.waiting.postMessage({ action: 'skipWaiting' });
                             window.location.reload(true);
                         }
                     }
-
-                    // Escuchar si se encuentra una actualización mientras se usa
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
@@ -312,9 +310,7 @@
                 });
             });
         }
-    </script>
 
-    <script>
         let lastAnnouncedTotals = {};
 
         function syncAnnouncedTotals() {
@@ -783,7 +779,7 @@
             winners.sort((a, b) => newTotals[b.id] - newTotals[a.id]);
 
             if (winners.length > 0) {
-                // SOLO MOSTRAR EL PODIO SI HAY GANADOR (SIN TOAST VERDE QUE BAJA)
+                // SOLO MOSTRAR EL PODIO
                 setTimeout(() => showPodium(winners, newTotals), 300);
             } else {
                 let delay = 100;
