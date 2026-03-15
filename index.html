@@ -85,9 +85,7 @@
 
         #viewTitleContainer { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
 
-        /* GRID RESPONSIVO MEJORADO PARA MODO HORIZONTAL */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        @media (min-width: 480px) and (max-width: 799px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
         @media (min-width: 800px) { .grid { grid-template-columns: repeat(5, 1fr); gap: 15px; } }
 
         @keyframes slideInForward { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
@@ -266,6 +264,17 @@
         </div>
     </div>
 
+    <div id="updateModal" class="modal" onclick="if(event.target === this) closeModal('updateModal')">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; font-weight: 900;">✨ Actualización Lista</h3>
+            <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">Hay una nueva versión de Rummy Pro disponible con mejoras. ¿Deseas recargar la página para aplicarla?</p>
+            <div style="display: flex; gap: 10px; margin-top: auto;">
+                <button class="outline-primary" style="flex: 1;" onclick="closeModal('updateModal')">Más tarde</button>
+                <button class="primary" style="flex: 1;" onclick="applyUpdate()">Actualizar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="podiumModal" class="modal" onclick="if(event.target === this) closeModal('podiumModal')">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--gold); margin-bottom: 20px; font-size: 2rem; font-weight: 900; text-shadow: 0 0 15px var(--gold-glow);">¡Partida Terminada!</h3>
@@ -277,26 +286,34 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.4.9</div>
+    <div id="watermark">xTFEXx - v0.4.10</div>
 
     <script>
+        // SISTEMA DE ACTUALIZACIÓN NATIVA CON MODAL (NO MÁS CONFIRM BLOQUEADO)
+        let pendingUpdateWorker = null;
+
+        function applyUpdate() {
+            if (pendingUpdateWorker) {
+                pendingUpdateWorker.postMessage({ action: 'skipWaiting' });
+            }
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
+                    // Forzar comprobación de actualizaciones en segundo plano
+                    reg.update();
+
                     if (reg.waiting) {
-                        if (confirm("✨ ¡Hay una nueva versión de Rummy Pro disponible! ¿Deseas actualizar ahora?")) {
-                            reg.waiting.postMessage({ action: 'skipWaiting' });
-                            window.location.reload(true);
-                        }
+                        pendingUpdateWorker = reg.waiting;
+                        openModal('updateModal');
                     }
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("✨ ¡Hay una nueva versión de Rummy Pro disponible! ¿Deseas actualizar ahora?")) {
-                                    newWorker.postMessage({ action: 'skipWaiting' });
-                                    window.location.reload(true);
-                                }
+                                pendingUpdateWorker = newWorker;
+                                openModal('updateModal');
                             }
                         });
                     });
@@ -306,8 +323,15 @@
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (refreshing) return;
                     refreshing = true;
-                    window.location.reload(true);
+                    window.location.reload();
                 });
+            });
+
+            // Cada vez que se vuelva a abrir la pestaña, buscar actualizaciones
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    navigator.serviceWorker.ready.then(reg => reg.update());
+                }
             });
         }
 
@@ -779,7 +803,6 @@
             winners.sort((a, b) => newTotals[b.id] - newTotals[a.id]);
 
             if (winners.length > 0) {
-                // SOLO MOSTRAR EL PODIO
                 setTimeout(() => showPodium(winners, newTotals), 300);
             } else {
                 let delay = 100;
