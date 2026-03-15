@@ -133,7 +133,7 @@
         .modal-content { background: var(--surface); border: 2px solid var(--primary); padding: 25px; border-radius: var(--radius); width: 100%; max-width: 500px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); max-height: 90vh; display: flex; flex-direction: column; animation: dropBounce 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         .scrollable-list { flex: 1; overflow-y: auto; min-height: 0; overscroll-behavior: contain; padding-right: 5px; }
         
-        /* NUEVO PODIO AISLADO DE TEXTOS */
+        /* PODIO Y ANIMACIONES */
         #podiumContainer { display: flex; justify-content: center; align-items: flex-end; gap: 10px; height: 250px; margin-bottom: 25px; overflow: hidden; padding-top: 10px;}
         .podium-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 30%; height: 100%; transform: translateY(100%); animation: slideUpPodium 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         .podium-wrapper.p1 { animation-delay: 0.1s; z-index: 3; }
@@ -155,7 +155,6 @@
         .drag-handle { font-size: 1.5rem; color: var(--text-muted); cursor: grab; padding: 0 10px; touch-action: none; }
         .drag-handle:active { cursor: grabbing; color: var(--primary); }
         .order-num { font-weight: 900; color: var(--primary); width: 25px; }
-        
         .ghost-drag { background: var(--surface); box-shadow: 0 20px 40px rgba(0,0,0,0.9); border-color: var(--primary); opacity: 1 !important; transform: scale(1.05); border-radius: 8px; cursor: grabbing !important; transition: none !important; z-index: 10000; }
 
         #toastContainer { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
@@ -277,7 +276,43 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.4.7</div>
+    <div id="watermark">xTFEXx - v0.4.8</div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    // Si ya hay un SW en espera (Actualización pendiente al entrar)
+                    if (reg.waiting) {
+                        if (confirm("✨ ¡Hay una nueva versión de Rummy Pro disponible! ¿Deseas actualizar ahora?")) {
+                            reg.waiting.postMessage({ action: 'skipWaiting' });
+                            window.location.reload(true);
+                        }
+                    }
+
+                    // Escuchar si se encuentra una actualización mientras se usa
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                if (confirm("✨ ¡Hay una nueva versión de Rummy Pro disponible! ¿Deseas actualizar ahora?")) {
+                                    newWorker.postMessage({ action: 'skipWaiting' });
+                                    window.location.reload(true);
+                                }
+                            }
+                        });
+                    });
+                }).catch(err => console.log('SW no registrado', err));
+
+                let refreshing;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    refreshing = true;
+                    window.location.reload(true);
+                });
+            });
+        }
+    </script>
 
     <script>
         let lastAnnouncedTotals = {};
@@ -374,7 +409,6 @@
         function closeToast(toast) { toast.classList.add('removing'); toast.classList.remove('show'); setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350); }
 
         window.addEventListener('beforeunload', function (e) { if (state.players.length > 0) { e.preventDefault(); e.returnValue = ''; return ''; } });
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.log('SW no registrado', err)); }); }
 
         let lastTouchY = 0;
         document.addEventListener('touchstart', function(e) { lastTouchY = e.touches[0].clientY; }, { passive: true });
@@ -749,6 +783,7 @@
             winners.sort((a, b) => newTotals[b.id] - newTotals[a.id]);
 
             if (winners.length > 0) {
+                // SOLO MOSTRAR EL PODIO SI HAY GANADOR (SIN TOAST VERDE QUE BAJA)
                 setTimeout(() => showPodium(winners, newTotals), 300);
             } else {
                 let delay = 100;
@@ -961,11 +996,6 @@
             if(!name) return;
             const saves = getSaves(); saves[name] = { state, liveInputs };
             localStorage.setItem('rummyProSaves', JSON.stringify(saves)); showToast("Partida guardada correctamente.", "success");
-        }
-        function openLoadModal() {
-            const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
-            Object.keys(saves).forEach(k => { list.innerHTML += `<div class="save-item"><span class="text-truncate">${k}</span><div style="display:flex;gap:5px"><button class="primary action-small" onclick="loadGame('${k}')">Cargar</button><button class="outline-primary action-small" onclick="exportSingleSave('${k}')">💾</button><button class="danger action-small" onclick="deleteSave('${k}')">🗑️</button></div></div>`; });
-            openModal('loadModal');
         }
 
         function loadGame(key) { const s = getSaves(); if(s[key] && confirm(`¿Cargar "${key}"?`)) { state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {} }; closeModal('loadModal'); state.viewingRoundNum = state.currentRoundNum; renderApp(false, ''); syncAnnouncedTotals(); showToast("Partida cargada.", "success"); } }
