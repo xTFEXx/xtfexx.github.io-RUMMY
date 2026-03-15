@@ -156,29 +156,28 @@
         .order-num { font-weight: 900; color: var(--primary); width: 25px; }
         .ghost-drag { background: var(--surface); box-shadow: 0 20px 40px rgba(0,0,0,0.9); border-color: var(--primary); opacity: 1 !important; transform: scale(1.05); border-radius: 8px; cursor: grabbing !important; transition: none !important; z-index: 10000; }
 
-        /* --- SISTEMA DE NOTIFICACIONES (TOASTS) ACTUALIZADO --- */
+        /* --- SISTEMA DE TOAST CON ELIMINACIÓN FLUIDA --- */
         #toastContainer { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
         
         .toast { 
             background: var(--surface); border-left: 4px solid var(--primary); color: #fff; padding: 15px 45px 15px 15px; 
             border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-size: 0.95rem; font-weight: bold; 
             position: relative; pointer-events: auto; transform: translateY(-20px) scale(0.9); opacity: 0; 
-            max-height: 150px; overflow: hidden; touch-action: pan-x;
-            /* La animación controla altura y opacidad para evitar saltos brutos */
+            max-height: 150px; overflow: hidden; touch-action: pan-y; /* Permitimos swipe horizontal */
+            /* Animación suave para todas las dimensiones que cambiarán al salir */
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease; 
         }
         
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
         
-        /* Clase clave para eliminar sin saltos bruscos */
+        /* Cierre limpio y sin salto de DOM. Reduce la altura, padding y margen a 0 */
         .toast.removing { 
-            transform: scale(0.8) translateY(-20px) !important; 
             opacity: 0 !important; 
             max-height: 0 !important; 
             padding-top: 0 !important; 
             padding-bottom: 0 !important; 
             margin-top: 0 !important;
-            margin-bottom: -10px !important; /* Compensa el gap del contenedor flex */
+            margin-bottom: -10px !important; /* Compensa exactamente el "gap: 10px" del toastContainer */
             border-width: 0 !important; 
             box-shadow: none !important;
         }
@@ -309,7 +308,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.5.1</div>
+    <div id="watermark">xTFEXx - v0.5.2</div>
 
     <script>
         let pendingUpdateWorker = null;
@@ -420,55 +419,52 @@
             }
         });
 
-        // NUEVO SISTEMA DE TOASTS: Evita saltos de DOM al eliminarse
         function showToast(message, type = 'primary') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             
-            // Verificamos si el toast tiene un botón o algo que no deba animarse extra, pero usamos la base
             toast.innerHTML = `${message}<button class="toast-close" onclick="closeToast(this.parentElement)">&times;</button>`;
             container.appendChild(toast);
             
-            // Pequeño retardo para que la clase .show active la transición
             setTimeout(() => toast.classList.add('show'), 10);
-            
-            // Autocierre
             let timeout = setTimeout(() => closeToast(toast), 4000);
 
-            let startY = 0, currentY = 0;
+            let startX = 0, currentX = 0;
+            
             toast.addEventListener('touchstart', e => { 
-                startY = e.touches[0].clientY; 
+                startX = e.touches[0].clientX; 
+                currentX = startX;
                 toast.style.transition = 'none'; 
                 clearTimeout(timeout); 
             }, {passive: true});
             
             toast.addEventListener('touchmove', e => {
-                currentY = e.touches[0].clientY; 
-                let delta = currentY - startY;
-                if (delta < 0) { 
-                    toast.style.transform = `translateY(${delta}px)`; 
-                    toast.style.opacity = 1 - (Math.abs(delta) / 100); 
-                }
+                currentX = e.touches[0].clientX; 
+                let delta = currentX - startX;
+                toast.style.transform = `translateX(${delta}px)`; 
+                toast.style.opacity = 1 - (Math.abs(delta) / 150); 
             }, {passive: true});
             
             toast.addEventListener('touchend', e => {
-                toast.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
-                let delta = currentY - startY;
-                if (delta < -30) closeToast(toast);
-                else { 
-                    toast.style.transform = 'translateY(0) scale(1)'; 
+                toast.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                let delta = currentX - startX;
+                if (Math.abs(delta) > 40) { 
+                    toast.style.transform = `translateX(${delta > 0 ? 150 : -150}%)`; 
+                    toast.style.opacity = '0'; 
+                    setTimeout(() => closeToast(toast), 10);
+                } else { 
+                    toast.style.transform = 'translateX(0) scale(1)'; 
                     toast.style.opacity = '1'; 
                     timeout = setTimeout(() => closeToast(toast), 3000); 
                 }
             });
         }
-
+        
         function closeToast(toast) { 
             if (toast.classList.contains('removing')) return;
             toast.classList.add('removing'); 
             toast.classList.remove('show'); 
-            // Se le da un poco más de tiempo para asegurar que max-height y margin lleguen a 0 antes de quitarlo del DOM
             setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 380); 
         }
 
