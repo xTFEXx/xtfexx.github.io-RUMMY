@@ -1,44 +1,41 @@
-const CACHE_NAME = 'rummy-cache-v2';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
-];
+const CACHE_NAME = 'rummy-pro-v1';
 
-// Instalar y guardar en caché
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
-  self.skipWaiting(); // Obliga a instalar la nueva versión de inmediato
+self.addEventListener('install', (e) => {
+    self.skipWaiting(); // Obliga al nuevo SW a instalarse inmediatamente
 });
 
-// Interceptar peticiones
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
-  );
+self.addEventListener('activate', (e) => {
+    // Limpia cachés viejas si es necesario
+    e.waitUntil(caches.keys().then((keyList) => {
+        return Promise.all(keyList.map((key) => {
+            if (key !== CACHE_NAME) return caches.delete(key);
+        }));
+    }));
+    self.clients.claim();
 });
 
-// Limpiar el caché viejo (la versión v1 que tenía el error)
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim(); // Toma el control de la app instalada
+self.addEventListener('fetch', (e) => {
+    // ESTRATEGIA NETWORK-FIRST (Red primero, Caché como respaldo)
+    e.respondWith(
+        fetch(e.request)
+            .then((res) => {
+                // Si hay internet y responde bien, guardamos una copia fresca en caché
+                const resClone = res.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(e.request, resClone);
+                });
+                return res;
+            })
+            .catch(() => {
+                // Si no hay internet, sacamos la versión de la caché
+                return caches.match(e.request);
+            })
+    );
+});
+
+// Escucha el mensaje de "Actualizar" desde la ventana de la app
+self.addEventListener('message', (e) => {
+    if (e.data && e.data.action === 'skipWaiting') {
+        self.skipWaiting();
+    }
 });
