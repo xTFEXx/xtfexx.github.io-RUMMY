@@ -289,7 +289,7 @@
         </div>
     </div>
 
-    <div id="updateModal" class="modal">
+    <div id="updateModal" class="modal" onclick="if(event.target === this) closeModal('updateModal')">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; font-weight: 900;">✨ Actualización Lista</h3>
             <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">Hay una nueva versión de Rummy Pro disponible con mejoras. ¿Deseas recargar la página para aplicarla?</p>
@@ -311,7 +311,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.5.8</div>
+    <div id="watermark">xTFEXx - v0.5.9</div>
 
     <script>
         let currentConfirmResolve = null;
@@ -383,6 +383,7 @@
             });
         }
 
+        // --- SISTEMA DE PWA ---
         let pendingUpdateWorker = null;
 
         function applyUpdate() {
@@ -394,8 +395,13 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    reg.update();
-                    if (reg.waiting) { pendingUpdateWorker = reg.waiting; openModal('updateModal'); }
+                    // Si ya hay uno esperando desde antes de recargar
+                    if (reg.waiting) { 
+                        pendingUpdateWorker = reg.waiting; 
+                        openModal('updateModal'); 
+                    }
+                    
+                    // Escuchar si encuentra uno nuevo mientras se usa
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
@@ -415,11 +421,22 @@
                 });
             });
 
+            // Cada vez que se vuelva a abrir la pestaña
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') { navigator.serviceWorker.ready.then(reg => reg.update()); }
+                if (document.visibilityState === 'visible') { 
+                    navigator.serviceWorker.ready.then(reg => {
+                        if (reg.waiting) {
+                            pendingUpdateWorker = reg.waiting;
+                            openModal('updateModal');
+                        } else {
+                            reg.update();
+                        }
+                    });
+                }
             });
         }
 
+        // --- VARIABLES DE ESTADO ---
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [] };

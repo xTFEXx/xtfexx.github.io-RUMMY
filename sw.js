@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rummy-pro-v2';
+const CACHE_NAME = 'rummy-pro-v3';
 
 self.addEventListener('install', (e) => {
-    // Ya NO forzamos el skipWaiting aquí. Esperamos a que el usuario presione "Actualizar".
+    // ⛔ AQUÍ NO DEBE HABER NADA. 
+    // Si pones self.skipWaiting() aquí, la página se actualizará sola sin preguntar.
 });
 
 self.addEventListener('activate', (e) => {
-    // Limpia cachés viejas
     e.waitUntil(caches.keys().then((keyList) => {
         return Promise.all(keyList.map((key) => {
             if (key !== CACHE_NAME) return caches.delete(key);
@@ -15,14 +15,11 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-    // ESTRATEGIA NETWORK-FIRST
     e.respondWith(
         fetch(e.request)
             .then((res) => {
                 const resClone = res.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(e.request, resClone);
-                });
+                caches.open(CACHE_NAME).then((cache) => { cache.put(e.request, resClone); });
                 return res;
             })
             .catch(() => {
@@ -31,7 +28,7 @@ self.addEventListener('fetch', (e) => {
     );
 });
 
-// Escucha el botón "Actualizar" de la página
+// Esta es la cerradura. Solo se abre si index.html le manda la llave ('skipWaiting')
 self.addEventListener('message', (e) => {
     if (e.data && e.data.action === 'skipWaiting') {
         self.skipWaiting();
