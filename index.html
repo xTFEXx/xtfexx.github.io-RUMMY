@@ -289,17 +289,6 @@
         </div>
     </div>
 
-    <div id="updateModal" class="modal" onclick="if(event.target === this) closeModal('updateModal')">
-        <div class="modal-content" style="text-align: center;">
-            <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; font-weight: 900;">✨ Actualización Lista</h3>
-            <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">Hay una nueva versión de Rummy Pro disponible con mejoras. ¿Deseas recargar la página para aplicarla?</p>
-            <div style="display: flex; gap: 10px; margin-top: auto;">
-                <button class="outline-primary" style="flex: 1;" onclick="closeModal('updateModal')">Más tarde</button>
-                <button class="primary" style="flex: 1;" onclick="applyUpdate()">Actualizar</button>
-            </div>
-        </div>
-    </div>
-
     <div id="podiumModal" class="modal" onclick="if(event.target === this) closeModal('podiumModal')">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--gold); margin-bottom: 20px; font-size: 2rem; font-weight: 900; text-shadow: 0 0 15px var(--gold-glow);">¡Partida Terminada!</h3>
@@ -311,20 +300,9 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.6.0</div>
+    <div id="watermark">xTFEXx - v0.6.1</div>
 
     <script>
-        // SISTEMA DE CANDADO PARA ACTUALIZACIÓN
-        let pendingUpdateWorker = null;
-        let userAcceptedUpdate = false; // <-- LA CLAVE PARA QUE NO SE RECARGUE SOLA
-
-        function applyUpdate() {
-            if (pendingUpdateWorker) {
-                userAcceptedUpdate = true;
-                pendingUpdateWorker.postMessage({ action: 'skipWaiting' });
-            }
-        }
-
         let currentConfirmResolve = null;
         let currentPromptResolve = null;
 
@@ -394,17 +372,19 @@
             });
         }
 
+        // --- SISTEMA DE ACTUALIZACIÓN AUTOMÁTICA SILENCIOSA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    reg.update();
-                    if (reg.waiting) { pendingUpdateWorker = reg.waiting; openModal('updateModal'); }
+                    // Si ya hay un SW esperando, forzar actualización
+                    if (reg.waiting) { reg.waiting.postMessage({ action: 'skipWaiting' }); }
+                    
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                pendingUpdateWorker = newWorker;
-                                openModal('updateModal');
+                                // Forzar instalación inmediata del nuevo código sin preguntar
+                                newWorker.postMessage({ action: 'skipWaiting' });
                             }
                         });
                     });
@@ -413,26 +393,15 @@
                 let refreshing;
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (refreshing) return;
-                    
-                    // SOLO RECARGAMOS SI EL USUARIO ACEPTÓ EXPLÍCITAMENTE
-                    if (userAcceptedUpdate) {
-                        refreshing = true;
-                        window.location.reload();
-                    }
+                    refreshing = true;
+                    // Recargar la página automáticamente para aplicar la versión nueva
+                    window.location.reload();
                 });
             });
-
+            
+            // Buscar actualizaciones silenciosamente al regresar a la pestaña
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') { 
-                    navigator.serviceWorker.ready.then(reg => {
-                        if (reg.waiting) {
-                            pendingUpdateWorker = reg.waiting;
-                            openModal('updateModal');
-                        } else {
-                            reg.update();
-                        }
-                    }); 
-                }
+                if (document.visibilityState === 'visible') { navigator.serviceWorker.ready.then(reg => reg.update()); }
             });
         }
 
@@ -525,7 +494,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const activeModal = document.querySelector('.modal.active');
-                if (activeModal && activeModal.id !== 'updateModal') closeModal(activeModal.id);
+                if (activeModal) closeModal(activeModal.id);
             }
         });
 
