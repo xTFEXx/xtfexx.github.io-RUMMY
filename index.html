@@ -311,9 +311,20 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.5.9</div>
+    <div id="watermark">xTFEXx - v0.5.10</div>
 
     <script>
+        // SISTEMA DE CANDADO PARA ACTUALIZACIÓN
+        let pendingUpdateWorker = null;
+        let userAcceptedUpdate = false; // <-- LA CLAVE PARA QUE NO SE RECARGUE SOLA
+
+        function applyUpdate() {
+            if (pendingUpdateWorker) {
+                userAcceptedUpdate = true;
+                pendingUpdateWorker.postMessage({ action: 'skipWaiting' });
+            }
+        }
+
         let currentConfirmResolve = null;
         let currentPromptResolve = null;
 
@@ -383,25 +394,11 @@
             });
         }
 
-        // --- SISTEMA DE PWA ---
-        let pendingUpdateWorker = null;
-
-        function applyUpdate() {
-            if (pendingUpdateWorker) {
-                pendingUpdateWorker.postMessage({ action: 'skipWaiting' });
-            }
-        }
-
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    // Si ya hay uno esperando desde antes de recargar
-                    if (reg.waiting) { 
-                        pendingUpdateWorker = reg.waiting; 
-                        openModal('updateModal'); 
-                    }
-                    
-                    // Escuchar si encuentra uno nuevo mientras se usa
+                    reg.update();
+                    if (reg.waiting) { pendingUpdateWorker = reg.waiting; openModal('updateModal'); }
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
@@ -416,12 +413,15 @@
                 let refreshing;
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (refreshing) return;
-                    refreshing = true;
-                    window.location.reload();
+                    
+                    // SOLO RECARGAMOS SI EL USUARIO ACEPTÓ EXPLÍCITAMENTE
+                    if (userAcceptedUpdate) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
                 });
             });
 
-            // Cada vez que se vuelva a abrir la pestaña
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') { 
                     navigator.serviceWorker.ready.then(reg => {
@@ -431,12 +431,11 @@
                         } else {
                             reg.update();
                         }
-                    });
+                    }); 
                 }
             });
         }
 
-        // --- VARIABLES DE ESTADO ---
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [] };
