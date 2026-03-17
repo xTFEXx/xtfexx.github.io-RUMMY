@@ -289,7 +289,7 @@
         </div>
     </div>
 
-    <div id="updateModal" class="modal" onclick="if(event.target === this) closeModal('updateModal')">
+    <div id="updateModal" class="modal">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; font-weight: 900;">✨ Actualización Lista</h3>
             <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">Hay una nueva versión de Rummy Pro disponible con mejoras. ¿Deseas recargar la página para aplicarla?</p>
@@ -311,7 +311,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.5.7</div>
+    <div id="watermark">xTFEXx - v0.5.8</div>
 
     <script>
         let currentConfirmResolve = null;
@@ -509,7 +509,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const activeModal = document.querySelector('.modal.active');
-                if (activeModal) closeModal(activeModal.id);
+                if (activeModal && activeModal.id !== 'updateModal') closeModal(activeModal.id);
             }
         });
 
