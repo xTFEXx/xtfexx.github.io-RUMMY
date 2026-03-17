@@ -75,6 +75,7 @@
         button:active { transform: scale(0.96); }
         button.primary { background: var(--primary); color: #0f172a; border: none; width: 100%; padding: 15px; font-size: 1.15rem; box-shadow: 0 4px 10px var(--primary-glow); }
         button.danger { background: var(--danger); color: #ffffff; border: none; }
+        button.warning { background: var(--warning); color: #000000; border: none; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
         button.outline-primary { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
         button.action-small { padding: 8px 12px; font-size: 0.85rem; }
 
@@ -128,6 +129,8 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); padding: 15px;}
         .modal.active { display: flex; }
         
+        #confirmModal, #promptModal { z-index: 200; }
+
         @keyframes dropBounce { 0% { transform: translateY(-50vh) scale(0.9); opacity: 0; } 60% { transform: translateY(20px) scale(1.02); opacity: 1; } 80% { transform: translateY(-10px) scale(1); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
 
         .modal-content { background: var(--surface); border: 2px solid var(--primary); padding: 25px; border-radius: var(--radius); width: 100%; max-width: 500px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); max-height: 90vh; display: flex; flex-direction: column; animation: dropBounce 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
@@ -139,7 +142,7 @@
         .podium-wrapper.p2 { animation-delay: 0.3s; z-index: 2; }
         .podium-wrapper.p3 { animation-delay: 0.5s; z-index: 1; }
 
-        .podium-block { width: 100%; display: flex; align-items: flex-end; justify-content: center; border-radius: 8px 8px 0 0; padding-bottom: 10px; }
+        .podium-block { width: 100%; display: flex; align-items: center; justify-content: center; border-radius: 8px 8px 0 0; }
         .podium-1 { background: linear-gradient(180deg, var(--gold) 0%, #b8860b 100%); height: 50%; box-shadow: 0 0 20px var(--gold-glow); }
         .podium-2 { background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 100%); height: 35%; box-shadow: 0 0 15px rgba(226, 232, 240, 0.4); }
         .podium-3 { background: linear-gradient(180deg, #cd7f32 0%, #8b4513 100%); height: 25%; box-shadow: 0 0 15px rgba(205, 127, 50, 0.4); }
@@ -156,36 +159,14 @@
         .order-num { font-weight: 900; color: var(--primary); width: 25px; }
         .ghost-drag { background: var(--surface); box-shadow: 0 20px 40px rgba(0,0,0,0.9); border-color: var(--primary); opacity: 1 !important; transform: scale(1.05); border-radius: 8px; cursor: grabbing !important; transition: none !important; z-index: 10000; }
 
-        /* --- SISTEMA DE TOAST CON ELIMINACIÓN FLUIDA --- */
         #toastContainer { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-        
-        .toast { 
-            background: var(--surface); border-left: 4px solid var(--primary); color: #fff; padding: 15px 45px 15px 15px; 
-            border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-size: 0.95rem; font-weight: bold; 
-            position: relative; pointer-events: auto; transform: translateY(-20px) scale(0.9); opacity: 0; 
-            max-height: 150px; overflow: hidden; touch-action: pan-y; /* Permitimos swipe horizontal */
-            /* Animación suave para todas las dimensiones que cambiarán al salir */
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease; 
-        }
-        
+        .toast { background: var(--surface); border-left: 4px solid var(--primary); color: #fff; padding: 15px 45px 15px 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); font-size: 0.95rem; font-weight: bold; position: relative; pointer-events: auto; transform: translateY(-20px) scale(0.9); opacity: 0; max-height: 150px; overflow: hidden; touch-action: pan-y; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease; }
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
-        
-        /* Cierre limpio y sin salto de DOM. Reduce la altura, padding y margen a 0 */
-        .toast.removing { 
-            opacity: 0 !important; 
-            max-height: 0 !important; 
-            padding-top: 0 !important; 
-            padding-bottom: 0 !important; 
-            margin-top: 0 !important;
-            margin-bottom: -10px !important; /* Compensa exactamente el "gap: 10px" del toastContainer */
-            border-width: 0 !important; 
-            box-shadow: none !important;
-        }
+        .toast.removing { opacity: 0 !important; max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; margin-top: 0 !important; margin-bottom: -10px !important; border-width: 0 !important; box-shadow: none !important; }
 
         .toast.danger { border-color: var(--danger); }
         .toast.warning { border-color: var(--warning); }
         .toast.success { border-color: var(--success); }
-
         button.toast-close { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; padding: 5px 10px; cursor: pointer; box-shadow: none; width: auto; height: auto; font-weight: 400; }
         button.toast-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
         button.toast-close:active { transform: translateY(-50%) scale(0.9); }
@@ -210,10 +191,10 @@
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
             <div class="config-sentence">
-                El jugador gana al llegar a <input type="number" id="cfgWin" class="inline-input" value="1000" onchange="updateConfig()" onkeydown="blockConfigChars(event)"> puntos.
+                El jugador gana al llegar a <input type="number" id="cfgWin" class="inline-input" value="1000" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeInput(this)"> puntos.
             </div>
             <div class="config-sentence">
-                El jugador se traba a los <input type="number" id="cfgLock" class="inline-input" value="500" onchange="updateConfig()" onkeydown="blockConfigChars(event)"> puntos.
+                El jugador se traba a los <input type="number" id="cfgLock" class="inline-input" value="500" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeInput(this)"> puntos.
             </div>
         </div>
 
@@ -245,6 +226,28 @@
     <div id="pastRoundBannerContainer" style="margin-top: 15px;"></div>
     
     <div style="margin-top: 25px;" id="actionBtnContainer"></div>
+
+    <div id="confirmModal" class="modal" onclick="if(event.target === this) closeModal('confirmModal')">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <h3 id="confirmTitle" style="margin-bottom: 15px; font-size: 1.6rem; font-weight: 900;"></h3>
+            <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; white-space: pre-wrap; font-size: 1.05rem;"></p>
+            <div style="display: flex; gap: 10px; margin-top: auto;">
+                <button id="confirmCancelBtn" class="outline-primary" style="flex: 1;">Cancelar</button>
+                <button id="confirmOkBtn" style="flex: 1;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="promptModal" class="modal" onclick="if(event.target === this) closeModal('promptModal')">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <h3 id="promptTitle" style="color: var(--primary); margin-bottom: 15px; font-size: 1.6rem; font-weight: 900;"></h3>
+            <input type="text" id="promptInput" class="standard-input" style="margin-bottom: 25px; font-size: 1.2rem; padding: 15px;" autocomplete="off">
+            <div style="display: flex; gap: 10px; margin-top: auto;">
+                <button id="promptCancelBtn" class="outline-primary" style="flex: 1;">Cancelar</button>
+                <button id="promptOkBtn" class="primary" style="flex: 1;">Guardar</button>
+            </div>
+        </div>
+    </div>
 
     <div id="loadModal" class="modal" onclick="if(event.target === this) closeModal('loadModal')">
         <div class="modal-content">
@@ -303,14 +306,83 @@
             <div id="podiumContainer"></div>
             <div style="display: flex; gap: 10px; margin-top: auto;">
                 <button class="outline-primary" style="flex: 1;" onclick="closeModal('podiumModal')">Ver Tablero</button>
-                <button class="primary" style="flex: 1;" onclick="if(confirm('¿Empezar una nueva partida con los mismos jugadores?')) { closeModal('podiumModal'); resetGame(); }">Nueva Partida</button>
+                <button class="primary" style="flex: 1;" onclick="promptNewGame()">Nueva Partida</button>
             </div>
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.5.2</div>
+    <div id="watermark">xTFEXx - v0.5.7</div>
 
     <script>
+        let currentConfirmResolve = null;
+        let currentPromptResolve = null;
+
+        function customConfirm(message, title = "Confirmación", isDanger = false) {
+            return new Promise(resolve => {
+                currentConfirmResolve = resolve;
+                
+                document.getElementById('confirmTitle').innerText = title;
+                document.getElementById('confirmTitle').style.color = isDanger ? 'var(--danger)' : 'var(--primary)';
+                document.getElementById('confirmMessage').innerText = message;
+                
+                const okBtn = document.getElementById('confirmOkBtn');
+                okBtn.className = isDanger ? 'danger' : 'primary';
+                
+                const newOkBtn = okBtn.cloneNode(true);
+                okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+                
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                
+                newOkBtn.addEventListener('click', () => {
+                    const res = currentConfirmResolve; currentConfirmResolve = null;
+                    closeModal('confirmModal'); if(res) res(true);
+                });
+                
+                newCancelBtn.addEventListener('click', () => {
+                    const res = currentConfirmResolve; currentConfirmResolve = null;
+                    closeModal('confirmModal'); if(res) res(false);
+                });
+                
+                openModal('confirmModal');
+            });
+        }
+
+        function customPrompt(title, defaultValue = "") {
+            return new Promise(resolve => {
+                currentPromptResolve = resolve;
+                
+                document.getElementById('promptTitle').innerText = title;
+                const input = document.getElementById('promptInput');
+                input.value = defaultValue;
+                
+                const okBtn = document.getElementById('promptOkBtn');
+                const newOkBtn = okBtn.cloneNode(true);
+                okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+                
+                const cancelBtn = document.getElementById('promptCancelBtn');
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                
+                const triggerOk = () => {
+                    const res = currentPromptResolve; currentPromptResolve = null;
+                    closeModal('promptModal'); if(res) res(document.getElementById('promptInput').value);
+                };
+                
+                newOkBtn.addEventListener('click', triggerOk);
+                newCancelBtn.addEventListener('click', () => {
+                    const res = currentPromptResolve; currentPromptResolve = null;
+                    closeModal('promptModal'); if(res) res(null);
+                });
+                
+                input.onkeydown = (e) => { if (e.key === 'Enter') triggerOk(); };
+                
+                openModal('promptModal');
+                setTimeout(() => input.focus(), 100);
+            });
+        }
+
         let pendingUpdateWorker = null;
 
         function applyUpdate() {
@@ -344,19 +416,37 @@
             });
 
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    navigator.serviceWorker.ready.then(reg => reg.update());
-                }
+                if (document.visibilityState === 'visible') { navigator.serviceWorker.ready.then(reg => reg.update()); }
             });
         }
 
+        let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
+        let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [] };
+        let liveInputs = { scores: {}, cuts: {} };
+        let pendingWinnerAction = { mode: '', roundId: null };
+        let tempWinner = { id: null, type: 'normal', points: 50 };
+
+        window.onload = () => { updatePlaceholder(); renderApp(); syncAnnouncedTotals(); };
 
         function syncAnnouncedTotals() {
             lastAnnouncedTotals = {};
-            state.players.forEach(p => {
-                lastAnnouncedTotals[p.id] = calculateTotal(p.id);
-            });
+            state.players.forEach(p => { lastAnnouncedTotals[p.id] = calculateTotal(p.id); });
+        }
+
+        function checkUnsavedChanges() {
+            if (state.viewingRoundNum === state.currentRoundNum) return false;
+            if (!editingRoundSnapshot) return false;
+            const currentRoundState = JSON.stringify(state.rounds.find(r => r.id === state.viewingRoundNum));
+            return currentRoundState !== editingRoundSnapshot;
+        }
+
+        function undoRoundChanges(silent = false) {
+            if (!editingRoundSnapshot) return;
+            const restoredRound = JSON.parse(editingRoundSnapshot);
+            const index = state.rounds.findIndex(r => r.id === restoredRound.id);
+            if (index !== -1) state.rounds[index] = restoredRound;
+            if (!silent) { renderApp(true); showToast("Cambios deshechos", "warning"); }
         }
 
         function updatePlaceholder() {
@@ -367,6 +457,7 @@
 
         function blockConfigChars(e) { if (['e', 'E', '+', '.', ',', '-'].includes(e.key)) { e.preventDefault(); } }
         function blockInvalidChars(e) { if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); } }
+        function sanitizeInput(el) { if(el.value.includes('.') || el.value.includes(',')) { el.value = el.value.replace(/[.,]/g, ''); } }
 
         function handleScoreKeydown(e, playerId) {
             if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); return; }
@@ -410,6 +501,9 @@
         function closeModal(id) { 
             document.getElementById(id).classList.remove('active'); 
             if (!document.querySelector('.modal.active')) { document.body.classList.remove('no-scroll'); } 
+            
+            if (id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
+            if (id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
         }
 
         document.addEventListener('keydown', (e) => {
@@ -423,7 +517,6 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
             toast.innerHTML = `${message}<button class="toast-close" onclick="closeToast(this.parentElement)">&times;</button>`;
             container.appendChild(toast);
             
@@ -431,40 +524,22 @@
             let timeout = setTimeout(() => closeToast(toast), 4000);
 
             let startX = 0, currentX = 0;
-            
-            toast.addEventListener('touchstart', e => { 
-                startX = e.touches[0].clientX; 
-                currentX = startX;
-                toast.style.transition = 'none'; 
-                clearTimeout(timeout); 
-            }, {passive: true});
-            
+            toast.addEventListener('touchstart', e => { startX = e.touches[0].clientX; currentX = startX; toast.style.transition = 'none'; clearTimeout(timeout); }, {passive: true});
             toast.addEventListener('touchmove', e => {
-                currentX = e.touches[0].clientX; 
-                let delta = currentX - startX;
-                toast.style.transform = `translateX(${delta}px)`; 
-                toast.style.opacity = 1 - (Math.abs(delta) / 150); 
+                currentX = e.touches[0].clientX; let delta = currentX - startX;
+                toast.style.transform = `translateX(${delta}px)`; toast.style.opacity = 1 - (Math.abs(delta) / 150); 
             }, {passive: true});
-            
             toast.addEventListener('touchend', e => {
-                toast.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                toast.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease';
                 let delta = currentX - startX;
-                if (Math.abs(delta) > 40) { 
-                    toast.style.transform = `translateX(${delta > 0 ? 150 : -150}%)`; 
-                    toast.style.opacity = '0'; 
-                    setTimeout(() => closeToast(toast), 10);
-                } else { 
-                    toast.style.transform = 'translateX(0) scale(1)'; 
-                    toast.style.opacity = '1'; 
-                    timeout = setTimeout(() => closeToast(toast), 3000); 
-                }
+                if (Math.abs(delta) > 40) { toast.style.transform = `translateX(${delta > 0 ? 150 : -150}%)`; toast.style.opacity = '0'; setTimeout(() => closeToast(toast), 10); } 
+                else { toast.style.transform = 'translateX(0) scale(1)'; toast.style.opacity = '1'; timeout = setTimeout(() => closeToast(toast), 3000); }
             });
         }
         
         function closeToast(toast) { 
             if (toast.classList.contains('removing')) return;
-            toast.classList.add('removing'); 
-            toast.classList.remove('show'); 
+            toast.classList.add('removing'); toast.classList.remove('show'); 
             setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 380); 
         }
 
@@ -478,41 +553,41 @@
             if (currentTouchY > lastTouchY && window.scrollY <= 0) { e.preventDefault(); }
         }, { passive: false });
 
-        let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [] };
-        let liveInputs = { scores: {}, cuts: {} };
-        let pendingWinnerAction = { mode: '', roundId: null };
-        let tempWinner = { id: null, type: 'normal', points: 50 };
-
-        window.onload = () => { updatePlaceholder(); renderApp(); syncAnnouncedTotals(); };
-
         function formatName(n) { return n ? n.trim().charAt(0).toUpperCase() + n.trim().slice(1).toLowerCase() : ''; }
         function generateId() { return 'p_' + Math.random().toString(36).substr(2, 9); }
 
-        function hardResetGame() {
-            if(confirm("⚠️ ¿Estás seguro de ELIMINAR TODO?\n\nEsto borrará todos los jugadores, las rondas y los puntajes. Empezarás una partida de cero y perderás todo progreso no guardado.")) {
+        async function hardResetGame() {
+            if(await customConfirm("⚠️ ¿Estás seguro de ELIMINAR TODO?\n\nEsto borrará todos los jugadores, las rondas y los puntajes. Empezarás una partida de cero y perderás todo progreso no guardado.", "Eliminar Todo", true)) {
                 state.players = []; state.playerOrder = []; state.rounds = [];
                 state.currentRoundNum = 1; state.viewingRoundNum = 1;
                 liveInputs = { scores: {}, cuts: {} };
+                editingRoundSnapshot = null;
                 renderApp(false, 'backward');
                 syncAnnouncedTotals();
                 showToast("Se ha eliminado todo. Tablero limpio.", "success");
             }
         }
 
-        function resetGamePrompt() {
+        async function resetGamePrompt() {
             if (state.players.length === 0) return showToast("No hay jugadores en la partida.", "warning");
-            if (confirm("¿Reiniciar la partida?\n\nLos puntajes volverán a cero y se borrarán las rondas, pero LOS JUGADORES se mantendrán en la mesa.")) {
+            if (await customConfirm("¿Reiniciar la partida?\n\nLos puntajes volverán a cero y se borrarán las rondas, pero LOS JUGADORES se mantendrán en la mesa.", "Reiniciar Partida", true)) {
                 resetGame();
+            }
+        }
+        
+        async function promptNewGame() {
+            if (await customConfirm('¿Empezar una nueva partida con los mismos jugadores?', 'Nueva Partida')) {
+                closeModal('podiumModal'); 
+                resetGame(); 
             }
         }
 
         function resetGame() {
             animateGrid('backward', () => {
-                state.rounds = [];
-                state.currentRoundNum = 1;
-                state.viewingRoundNum = 1;
+                state.rounds = []; state.currentRoundNum = 1; state.viewingRoundNum = 1;
                 liveInputs = { scores: {}, cuts: {} };
                 state.players.forEach(p => { p.baseScore = 0; p.joinRound = 1; });
+                editingRoundSnapshot = null;
                 renderApp(false, 'backward');
                 syncAnnouncedTotals();
             });
@@ -623,20 +698,31 @@
             const input = document.getElementById('newPlayerInput');
             const name = formatName(input.value);
             if (!name) return;
+
+            if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                showToast("Ya existe un jugador con ese nombre.", "danger");
+                return;
+            }
+
             let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id))) : 0;
             let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
             state.players.push(newPlayer);
             state.playerOrder.push(newPlayer.id); 
             input.value = '';
-            state.viewingRoundNum = state.currentRoundNum; 
+            
+            if(state.viewingRoundNum !== state.currentRoundNum) {
+                undoRoundChanges(true); 
+                state.viewingRoundNum = state.currentRoundNum;
+            }
+            
             renderApp(false, '');
             syncAnnouncedTotals();
-
             setTimeout(() => { const inp = document.getElementById('newPlayerInput'); if (inp) inp.focus(); }, 50);
         }
 
-        function removePlayer(playerId) {
-            if(confirm('¿Eliminar jugador?')) {
+        async function removePlayer(playerId) {
+            const pName = state.players.find(p => p.id === playerId)?.name || 'este jugador';
+            if(await customConfirm(`¿Seguro que deseas eliminar a ${pName}?`, 'Eliminar Jugador', true)) {
                 state.players = state.players.filter(p => p.id !== playerId);
                 state.playerOrder = state.playerOrder.filter(id => id !== playerId);
                 renderApp(false, ''); 
@@ -676,14 +762,16 @@
             renderApp(true);
         }
 
-        function deleteRound(roundId) {
-            if(confirm(`¿Seguro que deseas eliminar la Ronda ${roundId} permanentemente?`)) {
+        async function deleteRound(roundId) {
+            if(await customConfirm(`¿Seguro que deseas eliminar la Ronda ${roundId} permanentemente?`, 'Borrar Ronda', true)) {
                 animateGrid('backward', () => {
                     state.rounds = state.rounds.filter(r => r.id !== roundId);
                     state.rounds.forEach((r, idx) => r.id = idx + 1);
                     state.currentRoundNum = state.rounds.length + 1;
                     state.viewingRoundNum = state.currentRoundNum;
+                    editingRoundSnapshot = null;
                     renderApp(false, 'backward');
+                    evaluateGameStatus(false);
                 });
             }
         }
@@ -879,23 +967,48 @@
                 });
             } else if (pendingWinnerAction.mode === 'edit') {
                 const r = state.rounds.find(x => x.id === pendingWinnerAction.roundId);
-                if (r) r.winner = { ...tempWinner };
+                if (r) {
+                    r.winner = { ...tempWinner };
+                    editingRoundSnapshot = JSON.stringify(r); 
+                }
                 renderApp();
-                evaluateGameStatus(false);
             }
         }
 
-        function goToRound(num) {
+        async function goToRound(num) {
             if (num === state.viewingRoundNum) return;
+            
+            let didSave = false;
+            if (checkUnsavedChanges()) {
+                const keep = await customConfirm("Se modificaron los datos de esta ronda.\n\n¿Deseas guardar los cambios antes de salir?", "Cambios sin guardar");
+                if (keep) {
+                    editingRoundSnapshot = JSON.stringify(state.rounds.find(r => r.id === state.viewingRoundNum));
+                    didSave = true;
+                } else {
+                    undoRoundChanges(true);
+                }
+            }
             
             let returningToCurrent = (num === state.currentRoundNum && state.viewingRoundNum !== state.currentRoundNum);
             const direction = num > state.viewingRoundNum ? 'forward' : 'backward';
             
             animateGrid(direction, () => {
                 state.viewingRoundNum = num;
+                if (num !== state.currentRoundNum) {
+                    editingRoundSnapshot = JSON.stringify(state.rounds.find(r => r.id === num));
+                } else {
+                    editingRoundSnapshot = null;
+                }
+                
                 renderApp(false, direction);
                 
-                if (returningToCurrent) evaluateGameStatus(false);
+                if (returningToCurrent) {
+                    evaluateGameStatus(false);
+                }
+
+                if (didSave) {
+                    setTimeout(() => showToast("Cambios aplicados correctamente.", "success"), 200);
+                }
             });
         }
 
@@ -983,7 +1096,7 @@
                         <input tabindex="-1" type="number" class="total-score-input" value="${tot}" onchange="overrideTotalScore('${p.id}',this.value)" onkeydown="blockInvalidChars(event)" readonly>
                         ${roleHtml}
                         ${cutHtml}
-                        <input enterkeyhint="next" tabindex="1" type="number" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')">
+                        <input enterkeyhint="next" tabindex="1" type="number" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')">
                     </div>`;
                 } else { 
                     document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
@@ -1000,7 +1113,16 @@
                     }
                 }
             });
-            document.getElementById('actionBtnContainer').innerHTML = isCurrent ? `<button class="primary" onclick="commitRound()">Siguiente Ronda →</button>` : `<div style="display:flex;gap:10px;"><button class="outline-primary" style="flex:2" onclick="goToRound(${state.currentRoundNum})">Volver a Actual</button><button class="danger" style="flex:1" onclick="deleteRound(${state.viewingRoundNum})">🗑️ Borrar R${state.viewingRoundNum}</button></div>`;
+            
+            let undoBtnHtml = checkUnsavedChanges() ? `<button class="warning" style="flex:1;" onclick="undoRoundChanges()">↩️ Deshacer</button>` : '';
+
+            document.getElementById('actionBtnContainer').innerHTML = isCurrent 
+                ? `<button class="primary" onclick="commitRound()">Siguiente Ronda →</button>` 
+                : `<div style="display:flex;gap:10px;">
+                    <button class="outline-primary" style="flex:2" onclick="goToRound(${state.currentRoundNum})">Volver a Actual</button>
+                    ${undoBtnHtml}
+                    <button class="danger" style="flex:1" onclick="deleteRound(${state.viewingRoundNum})">🗑️ Borrar</button>
+                   </div>`;
         }
 
         function renderTable() {
@@ -1049,30 +1171,58 @@
         }
 
         function getSaves() { return JSON.parse(localStorage.getItem('rummyProSaves') || '{}'); }
-        function saveGamePrompt() {
+        
+        async function saveGamePrompt() {
             if(!state.players.length) return;
-            const name = prompt("Nombre:", `Rummy_${state.players.map(p => p.name[0]).join('')}_R${state.currentRoundNum}`);
+            const defaultName = `Rummy_${state.players.map(p => p.name[0]).join('')}_R${state.currentRoundNum}`;
+            const name = await customPrompt("Nombre de la Partida:", defaultName);
             if(!name) return;
             const saves = getSaves(); saves[name] = { state, liveInputs };
             localStorage.setItem('rummyProSaves', JSON.stringify(saves)); showToast("Partida guardada correctamente.", "success");
         }
 
-        function loadGame(key) { const s = getSaves(); if(s[key] && confirm(`¿Cargar "${key}"?`)) { state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {} }; closeModal('loadModal'); state.viewingRoundNum = state.currentRoundNum; renderApp(false, ''); syncAnnouncedTotals(); showToast("Partida cargada.", "success"); } }
-        function deleteSave(key) { if(confirm(`¿Eliminar "${key}"?`)) { const s = getSaves(); delete s[key]; localStorage.setItem('rummyProSaves', JSON.stringify(s)); openLoadModal(); } }
+        async function loadGame(key) { 
+            const s = getSaves(); 
+            if(s[key]) {
+                if (await customConfirm(`¿Cargar la partida "${key}"?\n\nPerderás el progreso no guardado de la partida actual.`, "Cargar Partida")) {
+                    state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {} }; 
+                    editingRoundSnapshot = null; closeModal('loadModal'); state.viewingRoundNum = state.currentRoundNum; 
+                    renderApp(false, ''); syncAnnouncedTotals(); showToast("Partida cargada.", "success"); 
+                }
+            } 
+        }
+
+        async function deleteSave(key) { 
+            if(await customConfirm(`¿Seguro que deseas eliminar la partida "${key}" permanentemente?`, "Borrar Partida", true)) { 
+                const s = getSaves(); delete s[key]; localStorage.setItem('rummyProSaves', JSON.stringify(s)); openLoadModal(); 
+            } 
+        }
+
         function exportSingleSave(key) {
             const s = getSaves(); const blob = new Blob([JSON.stringify({ [key]: s[key] })], { type: "application/json" });
             const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${key}.json`; a.click(); URL.revokeObjectURL(url);
         }
+
         function importSingleSave(event) {
             const file = event.target.files[0]; if (!file) return;
-            const reader = new FileReader(); reader.onload = (e) => {
+            const reader = new FileReader(); 
+            reader.onload = async (e) => {
                 try {
                     const imported = JSON.parse(e.target.result); const saves = getSaves();
-                    Object.keys(imported).forEach(n => { let fn = n; if (saves[fn]) { if (!confirm(`Sobrescribir "${fn}"?`)) { let c = 1; while(saves[`${fn}_${c}`]) c++; fn = `${fn}_${c}`; } } saves[fn] = imported[n]; });
+                    for (const n of Object.keys(imported)) { 
+                        let fn = n; 
+                        if (saves[fn]) { 
+                            const override = await customConfirm(`Ya existe una partida llamada "${fn}". ¿Deseas sobrescribirla?`, "Partida Existente");
+                            if (!override) { let c = 1; while(saves[`${fn}_${c}`]) c++; fn = `${fn}_${c}`; } 
+                        } 
+                        saves[fn] = imported[n]; 
+                    }
                     localStorage.setItem('rummyProSaves', JSON.stringify(saves)); openLoadModal();
                     showToast("Partida importada.", "success");
                 } catch (err) { showToast("Error al importar el archivo.", "danger"); }
-            }; reader.readAsText(file);
+            }; 
+            reader.readAsText(file);
+            event.target.value = ''; 
         }
     </script>
 </body>
