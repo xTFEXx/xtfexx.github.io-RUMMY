@@ -323,7 +323,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.6.9</div>
+    <div id="watermark">xTFEXx - v0.7.0</div>
 
     <script>
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
@@ -771,27 +771,6 @@
             return total;
         }
 
-        async function saveGamePrompt() {
-            if(!state.players.length) return;
-            const defaultName = `Rummy_${state.players.map(p => p.name[0]).join('')}_R${state.currentRoundNum}`;
-            
-            let name = await customPrompt("Nombre de la Partida:", defaultName);
-            if(!name) return;
-            
-            name = name.trim();
-            const saves = getSaves(); 
-            
-            // PROTECCIÓN CONTRA SOBRESCRITURA EN GUARDADO NORMAL
-            if(saves[name]) {
-                const override = await customConfirm(`Ya existe una partida llamada "${name}". ¿Deseas sobrescribirla?`, "Partida Existente", true);
-                if (!override) return;
-            }
-            
-            saves[name] = { state, liveInputs };
-            localStorage.setItem('rummyProSaves', JSON.stringify(saves)); 
-            showToast("Partida guardada correctamente.", "success");
-        }
-
         function addPlayer() {
             const input = document.getElementById('newPlayerInput');
             const name = formatName(input.value);
@@ -851,7 +830,16 @@
 
         function handleScoreInput(playerId, value) {
             if (state.viewingRoundNum === state.currentRoundNum && state.isGameOver) return;
-            const val = value === "" ? undefined : parseInt(value);
+            
+            // Permite el signo menos y vacíos sin transformarlos a NaN inmediatamente
+            let val;
+            if (value === "" || value === "-") {
+                val = value === "-" ? "-" : undefined;
+            } else {
+                val = parseInt(value);
+                if (isNaN(val)) val = undefined;
+            }
+
             if (state.viewingRoundNum === state.currentRoundNum) liveInputs.scores[playerId] = val;
             else { const r = state.rounds.find(x => x.id === state.viewingRoundNum); if(r) r.scores[playerId] = val; }
             renderApp(true);
@@ -889,10 +877,17 @@
             const activePlayers = state.players.filter(p => p.joinRound <= state.currentRoundNum);
             if(activePlayers.length < 2) return showToast("Mínimo 2 jugadores para jugar.", "warning");
 
-            let incomplete = activePlayers.filter(p => liveInputs.scores[p.id] === undefined);
+            let incomplete = activePlayers.filter(p => liveInputs.scores[p.id] === undefined || liveInputs.scores[p.id] === "-" || isNaN(liveInputs.scores[p.id]));
             if (incomplete.length > 0) {
                 showToast(`Faltan puntos de: ${incomplete.map(p=>p.name).join(", ")}`, "danger");
-                activePlayers.forEach(p => { const i = document.getElementById(`score_input_${p.id}`); if (liveInputs.scores[p.id] === undefined) i.classList.add('missing'); else i.classList.remove('missing'); });
+                activePlayers.forEach(p => { 
+                    const i = document.getElementById(`score_input_${p.id}`); 
+                    if (liveInputs.scores[p.id] === undefined || liveInputs.scores[p.id] === "-" || isNaN(liveInputs.scores[p.id])) {
+                        i.classList.add('missing'); 
+                    } else {
+                        i.classList.remove('missing');
+                    }
+                });
                 return;
             }
             openWinnerModal('commit', null);
@@ -1223,7 +1218,16 @@
                 }
                 
                 const roleHtml = `<div class="role-badge" style="${role ? '' : 'visibility: hidden;'}">${role || '-'}</div>`;
-                const curScore = isCurrent ? (liveInputs.scores[p.id] !== undefined ? liveInputs.scores[p.id] : '') : (state.rounds.find(r => r.id === state.viewingRoundNum)?.scores[p.id] ?? '');
+                
+                // Mantenemos temporalmente el guión si está ahí para no borrarlo.
+                let curScore = "";
+                if (isCurrent) {
+                    if (liveInputs.scores[p.id] !== undefined) curScore = liveInputs.scores[p.id];
+                } else {
+                    const r = state.rounds.find(x => x.id === state.viewingRoundNum);
+                    if (r && r.scores[p.id] !== undefined) curScore = r.scores[p.id];
+                }
+                
                 const curCut = isCurrent ? !!liveInputs.cuts[p.id] : !!state.rounds.find(r => r.id === state.viewingRoundNum)?.cuts[p.id];
                 const cutVisibility = isCutter ? '' : 'visibility: hidden;';
                 
@@ -1265,7 +1269,10 @@
 
                     const scoreInput = document.getElementById(`score_input_${p.id}`);
                     if (scoreInput) {
-                        scoreInput.value = curScore;
+                        // Solo actualiza el valor si no estás escribiendo activamente en él
+                        if (document.activeElement !== scoreInput) {
+                            scoreInput.value = curScore !== undefined ? curScore : '';
+                        }
                         if (inputDisabled) {
                             scoreInput.setAttribute('disabled', 'disabled');
                         } else {
@@ -1363,6 +1370,26 @@
 
         function getSaves() { return JSON.parse(localStorage.getItem('rummyProSaves') || '{}'); }
         
+        async function saveGamePrompt() {
+            if(!state.players.length) return;
+            const defaultName = `Rummy_${state.players.map(p => p.name[0]).join('')}_R${state.currentRoundNum}`;
+            
+            let name = await customPrompt("Nombre de la Partida:", defaultName);
+            if(!name) return;
+            
+            name = name.trim();
+            const saves = getSaves(); 
+            
+            if(saves[name]) {
+                const override = await customConfirm(`Ya existe una partida llamada "${name}". ¿Deseas sobrescribirla?`, "Partida Existente", true);
+                if (!override) return;
+            }
+            
+            saves[name] = { state, liveInputs };
+            localStorage.setItem('rummyProSaves', JSON.stringify(saves)); 
+            showToast("Partida guardada correctamente.", "success");
+        }
+
         async function loadGame(key) { 
             const s = getSaves(); 
             if(s[key]) {
