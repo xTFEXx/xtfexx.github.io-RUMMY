@@ -323,7 +323,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.7.0</div>
+    <div id="watermark">xTFEXx - v0.7.2</div>
 
     <script>
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
@@ -512,7 +512,29 @@
 
         function blockConfigChars(e) { if (['e', 'E', '+', '.', ',', '-'].includes(e.key)) { e.preventDefault(); } }
         function blockInvalidChars(e) { if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); } }
-        function sanitizeInput(el) { if(el.value.includes('.') || el.value.includes(',')) { el.value = el.value.replace(/[.,]/g, ''); } }
+        
+        // FUNCIÓN MEJORADA: Solo un "-" al inicio, ningún punto ni coma.
+        function sanitizeInput(el) { 
+            let val = el.value;
+            // Quitamos puntos y comas de inmediato
+            val = val.replace(/[.,]/g, '');
+            
+            if(val.includes('-')) {
+                // Comprobamos si el primer caracter era un guion
+                let isNeg = val.startsWith('-');
+                // Quitamos TODOS los guiones
+                val = val.replace(/-/g, '');
+                // Si originalmente empezaba con guion, se lo devolvemos (uno solo)
+                if(isNeg) {
+                    val = '-' + val;
+                }
+            }
+            
+            // Asignamos el valor modificado (si hubo cambios)
+            if (el.value !== val) {
+                el.value = val;
+            }
+        }
 
         function handleScoreKeydown(e, playerId) {
             if (state.viewingRoundNum === state.currentRoundNum && state.isGameOver) return;
@@ -831,7 +853,6 @@
         function handleScoreInput(playerId, value) {
             if (state.viewingRoundNum === state.currentRoundNum && state.isGameOver) return;
             
-            // Permite el signo menos y vacíos sin transformarlos a NaN inmediatamente
             let val;
             if (value === "" || value === "-") {
                 val = value === "-" ? "-" : undefined;
@@ -1219,7 +1240,6 @@
                 
                 const roleHtml = `<div class="role-badge" style="${role ? '' : 'visibility: hidden;'}">${role || '-'}</div>`;
                 
-                // Mantenemos temporalmente el guión si está ahí para no borrarlo.
                 let curScore = "";
                 if (isCurrent) {
                     if (liveInputs.scores[p.id] !== undefined) curScore = liveInputs.scores[p.id];
@@ -1243,7 +1263,7 @@
                         <input tabindex="-1" type="number" class="total-score-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" ${!isCurrent ? 'readonly' : ''}>
                         ${roleHtml}
                         ${cutHtml}
-                        <input enterkeyhint="next" tabindex="1" type="number" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" ${inputDisabled}>
+                        <input enterkeyhint="next" tabindex="1" type="text" inputmode="numeric" pattern="[0-9-]*" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" ${inputDisabled}>
                     </div>`;
                 } else { 
                     document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
@@ -1269,7 +1289,6 @@
 
                     const scoreInput = document.getElementById(`score_input_${p.id}`);
                     if (scoreInput) {
-                        // Solo actualiza el valor si no estás escribiendo activamente en él
                         if (document.activeElement !== scoreInput) {
                             scoreInput.value = curScore !== undefined ? curScore : '';
                         }
