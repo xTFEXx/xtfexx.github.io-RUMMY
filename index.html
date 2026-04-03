@@ -200,10 +200,10 @@
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
             <div class="config-sentence">
-                El jugador gana al llegar a <input type="number" id="cfgWin" class="inline-input" value="1000" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeInput(this)"> puntos.
+                El jugador gana al llegar a <input type="text" pattern="[0-9]*" id="cfgWin" class="inline-input" value="1000" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeConfigInput(this)"> puntos.
             </div>
             <div class="config-sentence">
-                El jugador se traba a los <input type="number" id="cfgLock" class="inline-input" value="500" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeInput(this)"> puntos.
+                El jugador se traba a los <input type="text" pattern="[0-9]*" id="cfgLock" class="inline-input" value="500" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeConfigInput(this)"> puntos.
             </div>
             <div style="color: var(--text-muted); font-size: 0.8rem; text-align: left; margin-top: 8px;">
                 * Estos valores pueden modificarse durante la partida
@@ -217,7 +217,7 @@
             <div class="flex-row">
                 <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeypress="if(event.key === 'Enter') addPlayer()">
                 <button onclick="addPlayer()" class="outline-primary action-small" style="flex: 1; height: 48px;">+ Añadir</button>
-                <button onclick="openOrderModal()" id="btnOrderPlayers" class="outline-primary action-small" style="flex: 1; height: 48px;">↕️ Ordenar</button>
+                <button onclick="openOrderModal()" id="btnOrderPlayers" class="outline-primary action-small" style="flex: 1; height: 48px;">↕️ Reordenar</button>
             </div>
         </div>
     </div>
@@ -291,11 +291,11 @@
 
     <div id="orderModal" class="modal" onclick="if(event.target === this) closeModal('orderModal')">
         <div class="modal-content">
-            <h3 style="color: var(--primary); margin-bottom: 15px; text-align: center; font-size: 1.6rem; font-weight: 900;">Cambiar Posición</h3>
+            <h3 style="color: var(--primary); margin-bottom: 15px; text-align: center; font-size: 1.6rem; font-weight: 900;">Reordenar Jugadores</h3>
             <p style="text-align: center; margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">Mantén pulsado ☰ para arrastrar y reubicar.</p>
             <div id="orderList" class="scrollable-list" style="margin-bottom: 20px;"></div>
             <div style="display: flex; gap: 10px; margin-top: auto;">
-                <button class="danger" style="flex: 1;" onclick="closeModal('orderModal')">Cancelar</button>
+                <button class="danger" style="flex: 1;" onclick="closeModal('orderModal'); showToast('Reordenamiento cancelado.', 'warning');">Cancelar</button>
                 <button class="primary" style="flex: 2;" onclick="confirmOrder()">Guardar Orden</button>
             </div>
         </div>
@@ -323,7 +323,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.7.2</div>
+    <div id="watermark">xTFEXx - v0.7.3</div>
 
     <script>
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
@@ -513,24 +513,31 @@
         function blockConfigChars(e) { if (['e', 'E', '+', '.', ',', '-'].includes(e.key)) { e.preventDefault(); } }
         function blockInvalidChars(e) { if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); } }
         
-        // FUNCIÓN MEJORADA: Solo un "-" al inicio, ningún punto ni coma.
-        function sanitizeInput(el) { 
+        // Sanitizador exclusivo para configuraciones (Solo permite números positivos)
+        function sanitizeConfigInput(el) {
+            let val = el.value.replace(/[^0-9]/g, '');
+            if (el.value !== val) el.value = val;
+        }
+
+        // Sanitizador de puntos: Permite un único "-" siempre y cuando esté en la posición cero. Limpia letras, espacios, comas y puntos.
+        function sanitizeScoreInput(el) { 
             let val = el.value;
-            // Quitamos puntos y comas de inmediato
-            val = val.replace(/[.,]/g, '');
+            // Elimina cualquier caracter que NO sea un número o un guion
+            val = val.replace(/[^0-9\-]/g, '');
             
+            // Si el valor contiene algún guion
             if(val.includes('-')) {
-                // Comprobamos si el primer caracter era un guion
+                // Vemos si originalmente el primer caracter era el guion
                 let isNeg = val.startsWith('-');
-                // Quitamos TODOS los guiones
+                // Destruimos todos los guiones sin piedad
                 val = val.replace(/-/g, '');
-                // Si originalmente empezaba con guion, se lo devolvemos (uno solo)
+                // Si sí empezaba con guion, se lo ponemos de vuelta exclusivamente al inicio
                 if(isNeg) {
                     val = '-' + val;
                 }
             }
             
-            // Asignamos el valor modificado (si hubo cambios)
+            // Refrescamos la casilla solo si hubo cambios para no entorpecer el cursor
             if (el.value !== val) {
                 el.value = val;
             }
@@ -775,7 +782,9 @@
             document.querySelectorAll('#orderList .drag-item').forEach(item => newOrder.push(item.dataset.id));
             let missing = (state.playerOrder || state.players.map(p=>p.id)).filter(id => !newOrder.includes(id));
             state.playerOrder = [...newOrder, ...missing];
-            closeModal('orderModal'); renderApp();
+            closeModal('orderModal'); 
+            renderApp();
+            showToast("Orden guardado correctamente.", "success");
         }
 
         function calculateTotal(playerId) {
@@ -1260,10 +1269,10 @@
                             <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)">
                             <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')">X</button>
                         </div>
-                        <input tabindex="-1" type="number" class="total-score-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" ${!isCurrent ? 'readonly' : ''}>
+                        <input tabindex="-1" type="text" pattern="[0-9\-]*" class="total-score-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" oninput="sanitizeScoreInput(this)" ${!isCurrent ? 'readonly' : ''}>
                         ${roleHtml}
                         ${cutHtml}
-                        <input enterkeyhint="next" tabindex="1" type="text" inputmode="numeric" pattern="[0-9-]*" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" ${inputDisabled}>
+                        <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" ${inputDisabled}>
                     </div>`;
                 } else { 
                     document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
