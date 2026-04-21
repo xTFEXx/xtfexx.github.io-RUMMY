@@ -49,7 +49,12 @@
             .round-nav::-webkit-scrollbar-thumb:hover, .table-container::-webkit-scrollbar-thumb:hover, .scrollable-list::-webkit-scrollbar-thumb:hover { background: var(--primary); }
         }
 
-        body { background-color: var(--bg-base); color: var(--text-main); min-height: 100vh; padding: 15px; padding-bottom: 40px; overflow-x: hidden; position: relative; }
+        body { 
+            background-color: var(--bg-base); color: var(--text-main); 
+            min-height: 100vh; padding: 15px; padding-bottom: 40px; 
+            overflow-x: hidden; position: relative; 
+            transition: padding-bottom 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
 
         .header-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
         .header-logo { height: 4.4rem; width: 4.4rem; margin-right: 15px; border-radius: 8px; object-fit: contain; }
@@ -179,6 +184,38 @@
         button.toast-close { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; padding: 5px 10px; cursor: pointer; box-shadow: none; width: auto; height: auto; font-weight: 400; }
         button.toast-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
         button.toast-close:active { transform: translateY(-50%) scale(0.9); }
+
+        /* --- ESTILOS TECLADO PERSONALIZADO (1/3 DE PANTALLA) --- */
+        .numpad-container {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15, 23, 42, 0.97);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border);
+            height: 33.33vh; min-height: 220px; max-height: 50vh;
+            padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.9);
+            z-index: 5000;
+            transform: translateY(100%);
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            touch-action: none; user-select: none; -webkit-user-select: none;
+        }
+        .numpad-container.active { transform: translateY(0); }
+        .numpad-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(5, 1fr); gap: 6px;
+            max-width: 500px; margin: 0 auto; height: 100%;
+        }
+        .numpad-btn {
+            background: var(--surface); color: white;
+            font-size: 1.6rem; font-weight: bold;
+            border: 1px solid var(--border); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; width: 100%; padding: 0;
+            transition: background 0.1s, transform 0.1s;
+            touch-action: none; user-select: none; -webkit-user-select: none;
+        }
+        .numpad-btn.pressed { background: var(--primary); color: #0f172a; transform: scale(0.95); }
+        .numpad-action { background: var(--surface-hover); color: var(--warning); font-size: 1.4rem; }
+        .numpad-enter { background: var(--success); color: white; border: none; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; grid-column: span 3; }
     </style>
 </head>
 <body>
@@ -222,24 +259,30 @@
         </div>
     </div>
 
-    <h3 style="margin-top: 10px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
-    <div class="table-container">
-        <table id="historyTable"></table>
+    <div id="emptyStateMessage" style="display: none; text-align: center; color: var(--text-muted); margin-top: 40px; padding: 30px 20px; border: 2px dashed var(--border); border-radius: var(--radius); font-size: 1.2rem; font-weight: 800; background: rgba(0,0,0,0.2);">
+        👤 Agrega jugadores para empezar la partida
     </div>
 
-    <div class="round-nav" id="roundNav"></div>
+    <div id="gameBoard">
+        <h3 style="margin-top: 10px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
+        <div class="table-container">
+            <table id="historyTable"></table>
+        </div>
 
-    <div id="viewTitleContainer">
-        <h2 id="viewTitle" style="text-align: center; font-size: 1.4rem; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px;"></h2>
+        <div class="round-nav" id="roundNav"></div>
+
+        <div id="viewTitleContainer">
+            <h2 id="viewTitle" style="text-align: center; font-size: 1.4rem; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px;"></h2>
+        </div>
+
+        <div class="grid" id="playersGrid"></div>
+
+        <div id="pastRoundBannerContainer" style="margin-top: 15px;"></div>
+        
+        <div style="margin-top: 25px;" id="actionBtnContainer"></div>
     </div>
 
-    <div class="grid" id="playersGrid"></div>
-
-    <div id="pastRoundBannerContainer" style="margin-top: 15px;"></div>
-    
-    <div style="margin-top: 25px;" id="actionBtnContainer"></div>
-
-    <div id="confirmModal" class="modal" onclick="if(event.target === this) closeModal('confirmModal')">
+    <div id="confirmModal" class="modal">
         <div class="modal-content" style="text-align: center; max-width: 400px;">
             <h3 id="confirmTitle" style="margin-bottom: 15px; font-size: 1.6rem; font-weight: 900;"></h3>
             <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; white-space: pre-wrap; font-size: 1.05rem;"></p>
@@ -250,7 +293,7 @@
         </div>
     </div>
 
-    <div id="promptModal" class="modal" onclick="if(event.target === this) closeModal('promptModal')">
+    <div id="promptModal" class="modal">
         <div class="modal-content" style="text-align: center; max-width: 400px;">
             <h3 id="promptTitle" style="color: var(--primary); margin-bottom: 15px; font-size: 1.6rem; font-weight: 900;"></h3>
             <input type="text" id="promptInput" class="standard-input" style="margin-bottom: 25px; font-size: 1.2rem; padding: 15px;" autocomplete="off">
@@ -261,7 +304,7 @@
         </div>
     </div>
 
-    <div id="loadModal" class="modal" onclick="if(event.target === this) closeModal('loadModal')">
+    <div id="loadModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--primary); margin-bottom: 20px; text-align: center; font-size: 1.6rem; font-weight: 900;">Mis Partidas</h3>
             <div id="savesList" class="scrollable-list" style="margin-bottom: 20px;"></div>
@@ -273,7 +316,7 @@
         </div>
     </div>
 
-    <div id="winnerModal" class="modal" onclick="if(event.target === this) closeModal('winnerModal')">
+    <div id="winnerModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--success); margin-bottom: 15px; text-align: center; font-size: 1.8rem; font-weight: 900;">Cierre de Ronda</h3>
             <div class="scrollable-list" style="margin-bottom: 15px;">
@@ -289,7 +332,7 @@
         </div>
     </div>
 
-    <div id="orderModal" class="modal" onclick="if(event.target === this) closeModal('orderModal')">
+    <div id="orderModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--primary); margin-bottom: 15px; text-align: center; font-size: 1.6rem; font-weight: 900;">Reordenar Jugadores</h3>
             <p style="text-align: center; margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">Mantén pulsado ☰ para arrastrar y reubicar.</p>
@@ -301,7 +344,7 @@
         </div>
     </div>
 
-    <div id="updateModal" class="modal" onclick="if(event.target === this) closeModal('updateModal')">
+    <div id="updateModal" class="modal">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; font-weight: 900;">✨ Actualización Lista</h3>
             <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">Hay una nueva versión de Rummy Pro disponible con mejoras. ¿Deseas recargar la página para aplicarla?</p>
@@ -312,7 +355,7 @@
         </div>
     </div>
 
-    <div id="podiumModal" class="modal" onclick="if(event.target === this) closeModal('podiumModal')">
+    <div id="podiumModal" class="modal">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--gold); margin-bottom: 20px; font-size: 2rem; font-weight: 900; text-shadow: 0 0 15px var(--gold-glow);">¡Partida Terminada!</h3>
             <div id="podiumContainer"></div>
@@ -323,7 +366,29 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.7.3</div>
+    <div id="customNumpad" class="numpad-container">
+        <div class="numpad-grid">
+            <button class="numpad-btn" data-key="1">1</button>
+            <button class="numpad-btn" data-key="2">2</button>
+            <button class="numpad-btn" data-key="3">3</button>
+            
+            <button class="numpad-btn" data-key="4">4</button>
+            <button class="numpad-btn" data-key="5">5</button>
+            <button class="numpad-btn" data-key="6">6</button>
+            
+            <button class="numpad-btn" data-key="7">7</button>
+            <button class="numpad-btn" data-key="8">8</button>
+            <button class="numpad-btn" data-key="9">9</button>
+            
+            <button class="numpad-btn numpad-action" data-key="-">+/-</button>
+            <button class="numpad-btn" data-key="0">0</button>
+            <button class="numpad-btn numpad-action" data-key="Backspace" id="btnNumpadDel">⌫</button>
+            
+            <button class="numpad-btn numpad-enter" data-key="Enter">Aceptar</button>
+        </div>
+    </div>
+
+    <div id="watermark">xTFEXx - v0.7.7</div>
 
     <script>
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
@@ -331,6 +396,268 @@
             localStorage.setItem('rummyProAutoSave', JSON.stringify({ state, liveInputs }));
         }
 
+        // --- GESTIÓN DE HISTORIAL (BOTÓN DE RETROCESO) Y MODALES ---
+        let isHandlingPopstate = false;
+
+        window.addEventListener('popstate', (e) => {
+            isHandlingPopstate = true;
+            
+            const numpad = document.getElementById('customNumpad');
+            if (numpad.classList.contains('active')) {
+                numpad.classList.remove('active');
+                document.body.style.paddingBottom = "40px";
+                if(numpadActiveInput) numpadActiveInput.blur();
+                numpadActiveInput = null;
+            } else {
+                const modals = Array.from(document.querySelectorAll('.modal.active'));
+                if (modals.length > 0) {
+                    const topModal = modals[modals.length - 1];
+                    topModal.classList.remove('active');
+                    if (modals.length === 1) document.body.classList.remove('no-scroll');
+                    
+                    if (topModal.id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
+                    if (topModal.id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
+                }
+            }
+            
+            setTimeout(() => { isHandlingPopstate = false; }, 50);
+        });
+
+        function pushUIState() {
+            history.pushState({ui: true}, "");
+        }
+
+        function openModal(id) { 
+            pushUIState();
+            document.getElementById(id).classList.add('active'); 
+            document.body.classList.add('no-scroll'); 
+        }
+
+        function closeModal(id) { 
+            const el = document.getElementById(id);
+            if (!el.classList.contains('active')) return;
+
+            el.classList.remove('active'); 
+            if (!document.querySelector('.modal.active')) { document.body.classList.remove('no-scroll'); } 
+            
+            if (id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
+            if (id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
+            
+            if (!isHandlingPopstate) { history.back(); }
+        }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal && modal.id !== 'updateModal') {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const activeModal = document.querySelector('.modal.active');
+                if (activeModal && activeModal.id !== 'updateModal') closeModal(activeModal.id);
+            }
+        });
+
+        // --- SISTEMA DEL TECLADO PERSONALIZADO ---
+        let numpadActiveInput = null;
+        let numpadPlayerId = null;
+        let isTotalInput = false;
+        let delTimeout, delInterval;
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 800 || ('ontouchstart' in window);
+        }
+
+        function openNumpad(inputEl, pId, isTotal) {
+            if (!isMobileDevice()) {
+                inputEl.removeAttribute('inputmode');
+                return;
+            }
+            
+            numpadActiveInput = inputEl;
+            numpadPlayerId = pId;
+            isTotalInput = isTotal;
+            
+            const numpad = document.getElementById('customNumpad');
+            if (!numpad.classList.contains('active')) {
+                pushUIState();
+                numpad.classList.add('active');
+            }
+            
+            setTimeout(() => {
+                const numpadHeight = numpad.offsetHeight;
+                document.body.style.paddingBottom = (numpadHeight + 20) + "px";
+                
+                const rect = inputEl.getBoundingClientRect();
+                const absoluteTop = window.pageYOffset + rect.top;
+                
+                const targetY = absoluteTop + rect.height - window.innerHeight + numpadHeight + 15;
+                window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+            }, 50); 
+        }
+
+        function closeNumpad() {
+            const numpad = document.getElementById('customNumpad');
+            if (!numpad.classList.contains('active')) return;
+            
+            numpad.classList.remove('active');
+            document.body.style.paddingBottom = "40px"; 
+            numpadActiveInput = null;
+            
+            if (!isHandlingPopstate) { history.back(); }
+        }
+
+        function closeNumpadDelay() {
+            setTimeout(() => {
+                if (document.activeElement !== numpadActiveInput && document.getElementById('customNumpad').classList.contains('active')) {
+                    closeNumpad();
+                }
+            }, 150);
+        }
+
+        function handleNumpadPress(key) {
+            if (!numpadActiveInput) return;
+            
+            let val = numpadActiveInput.value;
+            
+            if (key === 'Enter') {
+                if (isTotalInput) {
+                    promptOverrideTotal(numpadPlayerId, numpadActiveInput);
+                    numpadActiveInput.blur();
+                    closeNumpad();
+                } else {
+                    // Lógica para saltar al siguiente jugador sin puntaje
+                    let currentOrder = state.viewingRoundNum === state.currentRoundNum ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
+                    let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+                    
+                    activePlayers.sort((a, b) => {
+                        let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
+                        if (idxA === -1) idxA = 999; if (idxB === -1) idxB = 999;
+                        return idxA - idxB;
+                    });
+
+                    let currentIndex = activePlayers.findIndex(p => p.id === numpadPlayerId);
+                    let nextPlayer = null;
+
+                    for (let i = currentIndex + 1; i < activePlayers.length; i++) {
+                        let inp = document.getElementById(`score_input_${activePlayers[i].id}`);
+                        if (inp && (inp.value === '' || inp.value === '-')) {
+                            nextPlayer = activePlayers[i];
+                            break;
+                        }
+                    }
+                    
+                    if (!nextPlayer) {
+                        for (let i = 0; i < currentIndex; i++) {
+                            let inp = document.getElementById(`score_input_${activePlayers[i].id}`);
+                            if (inp && (inp.value === '' || inp.value === '-')) {
+                                nextPlayer = activePlayers[i];
+                                break;
+                            }
+                        }
+                    }
+
+                    if (nextPlayer) {
+                        document.getElementById(`score_input_${nextPlayer.id}`).focus();
+                    } else {
+                        numpadActiveInput.blur();
+                        closeNumpad();
+                        if (state.viewingRoundNum === state.currentRoundNum) commitRound();
+                    }
+                }
+                return;
+            }
+            
+            if (key === 'Backspace') {
+                val = val.slice(0, -1);
+            } else if (key === '-') {
+                if (val.startsWith('-')) val = val.substring(1);
+                else val = '-' + val;
+            } else {
+                val += key;
+            }
+            
+            numpadActiveInput.value = val;
+            
+            sanitizeScoreInput(numpadActiveInput);
+            if (!isTotalInput) {
+                handleScoreInput(numpadPlayerId, numpadActiveInput.value);
+            }
+        }
+
+        function startNumpadDelete(e) {
+            if (e) e.preventDefault();
+            handleNumpadPress('Backspace');
+            document.getElementById('btnNumpadDel').classList.add('pressed');
+            
+            delTimeout = setTimeout(() => {
+                delInterval = setInterval(() => {
+                    handleNumpadPress('Backspace');
+                }, 80); 
+            }, 400);
+        }
+
+        function stopNumpadDelete(e) {
+            if (e) e.preventDefault();
+            document.getElementById('btnNumpadDel').classList.remove('pressed');
+            clearTimeout(delTimeout);
+            clearInterval(delInterval);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const numpad = document.getElementById('customNumpad');
+            
+            numpad.addEventListener('touchstart', (e) => {
+                const btn = e.target.closest('.numpad-btn');
+                if (!btn) return;
+                e.preventDefault(); 
+                
+                if (btn.id === 'btnNumpadDel') {
+                    startNumpadDelete(e);
+                } else {
+                    btn.classList.add('pressed');
+                    handleNumpadPress(btn.dataset.key);
+                }
+            }, {passive: false});
+
+            numpad.addEventListener('touchend', (e) => {
+                const btn = e.target.closest('.numpad-btn');
+                if (btn) btn.classList.remove('pressed');
+                if (btn && btn.id === 'btnNumpadDel') stopNumpadDelete(e);
+            });
+
+            numpad.addEventListener('touchcancel', (e) => {
+                const btn = e.target.closest('.numpad-btn');
+                if (btn) btn.classList.remove('pressed');
+                if (btn && btn.id === 'btnNumpadDel') stopNumpadDelete(e);
+            });
+            
+            numpad.addEventListener('mousedown', (e) => {
+                const btn = e.target.closest('.numpad-btn');
+                if (!btn) return;
+                e.preventDefault();
+                
+                if (btn.id === 'btnNumpadDel') startNumpadDelete(e);
+                else {
+                    btn.classList.add('pressed');
+                    handleNumpadPress(btn.dataset.key);
+                }
+            });
+            numpad.addEventListener('mouseup', (e) => {
+                const btn = e.target.closest('.numpad-btn');
+                if (btn) btn.classList.remove('pressed');
+                if (btn && btn.id === 'btnNumpadDel') stopNumpadDelete(e);
+            });
+            numpad.addEventListener('mouseleave', (e) => {
+                document.querySelectorAll('.numpad-btn').forEach(b => b.classList.remove('pressed'));
+                stopNumpadDelete(e);
+            });
+        });
+
+        // --- SISTEMA DE DIÁLOGOS Y TOASTS ---
         let currentConfirmResolve = null;
         let currentPromptResolve = null;
 
@@ -400,7 +727,37 @@
             });
         }
 
-        // --- SISTEMA DE ACTUALIZACIÓN AUTOMÁTICA SILENCIOSA ---
+        function showToast(message, type = 'primary') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${message}<button class="toast-close" onclick="closeToast(this.parentElement)">&times;</button>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            let timeout = setTimeout(() => closeToast(toast), 4000);
+
+            let startX = 0, currentX = 0;
+            toast.addEventListener('touchstart', e => { startX = e.touches[0].clientX; currentX = startX; toast.style.transition = 'none'; clearTimeout(timeout); }, {passive: true});
+            toast.addEventListener('touchmove', e => {
+                currentX = e.touches[0].clientX; let delta = currentX - startX;
+                toast.style.transform = `translateX(${delta}px)`; toast.style.opacity = 1 - (Math.abs(delta) / 150); 
+            }, {passive: true});
+            toast.addEventListener('touchend', e => {
+                toast.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease';
+                let delta = currentX - startX;
+                if (Math.abs(delta) > 40) { toast.style.transform = `translateX(${delta > 0 ? 150 : -150}%)`; toast.style.opacity = '0'; setTimeout(() => closeToast(toast), 10); } 
+                else { toast.style.transform = 'translateX(0) scale(1)'; toast.style.opacity = '1'; timeout = setTimeout(() => closeToast(toast), 3000); }
+            });
+        }
+        
+        function closeToast(toast) { 
+            if (toast.classList.contains('removing')) return;
+            toast.classList.add('removing'); toast.classList.remove('show'); 
+            setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 380); 
+        }
+
+        // --- SISTEMA PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
@@ -513,146 +870,41 @@
         function blockConfigChars(e) { if (['e', 'E', '+', '.', ',', '-'].includes(e.key)) { e.preventDefault(); } }
         function blockInvalidChars(e) { if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); } }
         
-        // Sanitizador exclusivo para configuraciones (Solo permite números positivos)
         function sanitizeConfigInput(el) {
             let val = el.value.replace(/[^0-9]/g, '');
             if (el.value !== val) el.value = val;
         }
 
-        // Sanitizador de puntos: Permite un único "-" siempre y cuando esté en la posición cero. Limpia letras, espacios, comas y puntos.
         function sanitizeScoreInput(el) { 
             let val = el.value;
-            // Elimina cualquier caracter que NO sea un número o un guion
             val = val.replace(/[^0-9\-]/g, '');
             
-            // Si el valor contiene algún guion
             if(val.includes('-')) {
-                // Vemos si originalmente el primer caracter era el guion
                 let isNeg = val.startsWith('-');
-                // Destruimos todos los guiones sin piedad
                 val = val.replace(/-/g, '');
-                // Si sí empezaba con guion, se lo ponemos de vuelta exclusivamente al inicio
-                if(isNeg) {
-                    val = '-' + val;
-                }
+                if(isNeg) { val = '-' + val; }
             }
             
-            // Refrescamos la casilla solo si hubo cambios para no entorpecer el cursor
-            if (el.value !== val) {
-                el.value = val;
-            }
+            if (el.value !== val) { el.value = val; }
         }
 
-        function handleScoreKeydown(e, playerId) {
-            if (state.viewingRoundNum === state.currentRoundNum && state.isGameOver) return;
-            if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); return; }
-            
-            if (e.key === 'Enter' || e.keyCode === 13) {
-                e.preventDefault();
-                
-                const isCurrent = state.viewingRoundNum === state.currentRoundNum;
-                let currentOrder = isCurrent ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
-                let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
-                
-                activePlayers.sort((a, b) => {
-                    let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
-                    if (idxA === -1) idxA = 999; if (idxB === -1) idxB = 999;
-                    return idxA - idxB;
-                });
-
-                let currentIndex = activePlayers.findIndex(p => p.id === playerId);
-                
-                if (currentIndex >= 0 && currentIndex < activePlayers.length - 1) {
-                    let nextId = activePlayers[currentIndex + 1].id;
-                    let nextInput = document.getElementById(`score_input_${nextId}`);
-                    if(nextInput) nextInput.focus();
-                } else {
-                    let missingPlayer = activePlayers.find(p => {
-                        let inp = document.getElementById(`score_input_${p.id}`);
-                        return inp && inp.value === '';
-                    });
-                    
-                    if (missingPlayer) {
-                        document.getElementById(`score_input_${missingPlayer.id}`).focus();
-                    } else {
-                        document.getElementById(`score_input_${playerId}`).blur();
-                        if (isCurrent) commitRound();
-                    }
-                }
-            }
+        function openModal(id) { 
+            pushUIState();
+            document.getElementById(id).classList.add('active'); 
+            document.body.classList.add('no-scroll'); 
         }
 
-        async function promptOverrideTotal(playerId, inputEl) {
-            if (state.viewingRoundNum !== state.currentRoundNum) return;
-            
-            const p = state.players.find(x => x.id === playerId);
-            if (!p) return;
-            const newTotal = parseInt(inputEl.value);
-            const oldTotal = calculateTotal(playerId);
-
-            if (isNaN(newTotal) || newTotal === oldTotal) {
-                inputEl.value = oldTotal;
-                return;
-            }
-
-            const confirmed = await customConfirm(`¿Seguro que deseas cambiar el puntaje total de ${p.name} de ${oldTotal} a ${newTotal}?`, "Modificar Puntaje");
-            if (confirmed) {
-                p.baseScore += (newTotal - oldTotal);
-                state.isGameOver = checkIfGameOver();
-                renderApp(true);
-                showToast("Puntaje modificado correctamente.", "success");
-                if (state.viewingRoundNum === state.currentRoundNum) {
-                    evaluateGameStatus(false);
-                }
-            } else {
-                inputEl.value = oldTotal;
-            }
-        }
-
-        function openModal(id) { document.getElementById(id).classList.add('active'); document.body.classList.add('no-scroll'); }
         function closeModal(id) { 
-            document.getElementById(id).classList.remove('active'); 
+            const el = document.getElementById(id);
+            if (!el.classList.contains('active')) return;
+
+            el.classList.remove('active'); 
             if (!document.querySelector('.modal.active')) { document.body.classList.remove('no-scroll'); } 
             
             if (id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
             if (id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const activeModal = document.querySelector('.modal.active');
-                if (activeModal) closeModal(activeModal.id);
-            }
-        });
-
-        function showToast(message, type = 'primary') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `${message}<button class="toast-close" onclick="closeToast(this.parentElement)">&times;</button>`;
-            container.appendChild(toast);
             
-            setTimeout(() => toast.classList.add('show'), 10);
-            let timeout = setTimeout(() => closeToast(toast), 4000);
-
-            let startX = 0, currentX = 0;
-            toast.addEventListener('touchstart', e => { startX = e.touches[0].clientX; currentX = startX; toast.style.transition = 'none'; clearTimeout(timeout); }, {passive: true});
-            toast.addEventListener('touchmove', e => {
-                currentX = e.touches[0].clientX; let delta = currentX - startX;
-                toast.style.transform = `translateX(${delta}px)`; toast.style.opacity = 1 - (Math.abs(delta) / 150); 
-            }, {passive: true});
-            toast.addEventListener('touchend', e => {
-                toast.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease';
-                let delta = currentX - startX;
-                if (Math.abs(delta) > 40) { toast.style.transform = `translateX(${delta > 0 ? 150 : -150}%)`; toast.style.opacity = '0'; setTimeout(() => closeToast(toast), 10); } 
-                else { toast.style.transform = 'translateX(0) scale(1)'; toast.style.opacity = '1'; timeout = setTimeout(() => closeToast(toast), 3000); }
-            });
-        }
-        
-        function closeToast(toast) { 
-            if (toast.classList.contains('removing')) return;
-            toast.classList.add('removing'); toast.classList.remove('show'); 
-            setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 380); 
+            if (!isHandlingPopstate) { history.back(); }
         }
 
         window.addEventListener('beforeunload', function (e) { if (state.players.length > 0) { e.preventDefault(); e.returnValue = ''; return ''; } });
@@ -660,7 +912,7 @@
         let lastTouchY = 0;
         document.addEventListener('touchstart', function(e) { lastTouchY = e.touches[0].clientY; }, { passive: true });
         document.addEventListener('touchmove', function(e) {
-            if (e.target.closest('.modal-content') || e.target.closest('.table-container') || e.target.closest('.round-nav')) return;
+            if (e.target.closest('.modal-content') || e.target.closest('.table-container') || e.target.closest('.round-nav') || e.target.closest('.numpad-container')) return;
             const currentTouchY = e.touches[0].clientY;
             if (currentTouchY > lastTouchY && window.scrollY <= 0) { e.preventDefault(); }
         }, { passive: false });
@@ -1175,10 +1427,23 @@
         }
 
         function renderApp(keepFocus = false, direction = '') {
+            document.getElementById('cfgWin').value = state.config.win; 
+            document.getElementById('cfgLock').value = state.config.lock;
+            
+            if (state.players.length === 0) {
+                document.getElementById('gameBoard').style.display = 'none';
+                document.getElementById('emptyStateMessage').style.display = 'block';
+                document.getElementById('btnOrderPlayers').style.display = 'none';
+                autoSave();
+                return;
+            }
+            
+            document.getElementById('gameBoard').style.display = 'block';
+            document.getElementById('emptyStateMessage').style.display = 'none';
+            
             if (!state.playerOrder || state.playerOrder.length === 0) state.playerOrder = state.players.map(p => p.id);
             state.rounds.forEach(r => { if (!r.playerOrder) r.playerOrder = state.players.map(p => p.id); });
 
-            document.getElementById('cfgWin').value = state.config.win; document.getElementById('cfgLock').value = state.config.lock;
             document.getElementById('btnOrderPlayers').style.display = (state.viewingRoundNum === state.currentRoundNum && !state.isGameOver) ? 'flex' : 'none';
 
             renderNav(); renderCards(keepFocus, direction); renderTable();
@@ -1269,10 +1534,10 @@
                             <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)">
                             <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')">X</button>
                         </div>
-                        <input tabindex="-1" type="text" pattern="[0-9\-]*" class="total-score-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" oninput="sanitizeScoreInput(this)" ${!isCurrent ? 'readonly' : ''}>
+                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', true)" onblur="closeNumpadDelay()" ${!isCurrent ? 'readonly' : ''}>
                         ${roleHtml}
                         ${cutHtml}
-                        <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" ${inputDisabled}>
+                        <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" inputmode="none" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" onfocus="openNumpad(this, '${p.id}', false)" onblur="closeNumpadDelay()" ${inputDisabled}>
                     </div>`;
                 } else { 
                     document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
