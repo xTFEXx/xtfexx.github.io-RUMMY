@@ -53,12 +53,12 @@
             background-color: var(--bg-base); color: var(--text-main); 
             min-height: 100vh; padding: 15px; padding-bottom: 40px; 
             overflow-x: hidden; position: relative; 
-            transition: padding-bottom 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            transition: padding-bottom 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); 
         }
 
-        .header-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
-        .header-logo { height: 4.4rem; width: 4.4rem; margin-right: 15px; border-radius: 8px; object-fit: contain; }
-        h1 { color: var(--primary); font-size: 2.2rem; letter-spacing: 2px; margin: 0; text-shadow: 0 0 15px var(--primary-glow); font-weight: 900; }
+        .header-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; gap: 10px; }
+        .header-logo { height: clamp(3rem, 12vw, 4.4rem); width: clamp(3rem, 12vw, 4.4rem); border-radius: 8px; object-fit: contain; flex-shrink: 0; }
+        h1 { color: var(--primary); font-size: clamp(1.4rem, 6vw, 2.2rem); letter-spacing: 1px; margin: 0; text-shadow: 0 0 15px var(--primary-glow); font-weight: 900; white-space: nowrap; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; }
         
         .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
@@ -143,7 +143,7 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); padding: 15px;}
         .modal.active { display: flex; }
         
-        #confirmModal, #promptModal { z-index: 200; }
+        #confirmModal, #promptModal { z-index: 9999 !important; }
 
         @keyframes dropBounce { 0% { transform: translateY(-50vh) scale(0.9); opacity: 0; } 60% { transform: translateY(20px) scale(1.02); opacity: 1; } 80% { transform: translateY(-10px) scale(1); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
 
@@ -163,8 +163,12 @@
         
         @keyframes slideUpPodium { to { transform: translateY(0); } }
 
-        .save-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); margin-bottom: 10px; border-radius: 8px; }
-        #watermark { position: fixed; bottom: 15px; right: 15px; color: rgba(255, 255, 255, 0.08); font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; pointer-events: none; z-index: 1000; user-select: none; text-transform: none; }
+        .save-item { display: flex; flex-direction: column; gap: 10px; padding: 15px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); margin-bottom: 10px; border-radius: 8px; }
+        .save-item-title { font-weight: bold; color: var(--primary); font-size: 1.1rem; word-break: break-all; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .save-item-actions { display: flex; gap: 6px; width: 100%; }
+
+        /* Anclado absolutamente al final del documento para no molestar sobre los teclados */
+        #watermark { position: absolute; bottom: 15px; right: 15px; color: rgba(255, 255, 255, 0.08); font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; pointer-events: none; z-index: 1000; user-select: none; text-transform: none; }
 
         .drag-item { display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); user-select: none; -webkit-user-select: none; transition: background 0.15s ease; }
         .drag-item.dragging { opacity: 0.15; border: 1px dashed var(--primary); background: transparent; }
@@ -225,7 +229,7 @@
     <div class="header-container">
         <img src="icon-512.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
         <h1>Rummy Pro</h1>
-        <button class="danger" style="margin-left: auto; font-size: 0.8rem; padding: 8px 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);" onclick="hardResetGame()">🗑️ Eliminar Todo</button>
+        <button class="danger" style="margin-left: auto; font-size: clamp(0.7rem, 2.5vw, 0.8rem); padding: 8px 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); flex-shrink: 0; white-space: nowrap;" onclick="hardResetGame()">🗑️ Eliminar Todo</button>
     </div>
 
     <div class="card-panel">
@@ -237,10 +241,10 @@
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
             <div class="config-sentence">
-                El jugador gana al llegar a <input type="text" pattern="[0-9]*" id="cfgWin" class="inline-input" value="1000" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeConfigInput(this)"> puntos.
+                El jugador gana al llegar a <input type="text" pattern="[0-9]*" id="cfgWin" class="inline-input" value="1000" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeConfigInput(this)" onfocus="scrollIntoViewCenter(this, false)"> puntos.
             </div>
             <div class="config-sentence">
-                El jugador se traba a los <input type="text" pattern="[0-9]*" id="cfgLock" class="inline-input" value="500" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeConfigInput(this)"> puntos.
+                El jugador se traba a los <input type="text" pattern="[0-9]*" id="cfgLock" class="inline-input" value="500" onchange="updateConfig()" onkeydown="blockConfigChars(event)" oninput="sanitizeConfigInput(this)" onfocus="scrollIntoViewCenter(this, false)"> puntos.
             </div>
             <div style="color: var(--text-muted); font-size: 0.8rem; text-align: left; margin-top: 8px;">
                 * Estos valores pueden modificarse durante la partida
@@ -252,7 +256,7 @@
                 👥 Nuevo Jugador
             </div>
             <div class="flex-row">
-                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeypress="if(event.key === 'Enter') addPlayer()">
+                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeypress="if(event.key === 'Enter') addPlayer()" onfocus="scrollIntoViewCenter(this, false)">
                 <button onclick="addPlayer()" class="outline-primary action-small" style="flex: 1; height: 48px;">+ Añadir</button>
                 <button onclick="openOrderModal()" id="btnOrderPlayers" class="outline-primary action-small" style="flex: 1; height: 48px;">↕️ Reordenar</button>
             </div>
@@ -344,7 +348,7 @@
         </div>
     </div>
 
-    <div id="updateModal" class="modal">
+    <div id="updateModal" class="modal" onclick="if(event.target === this) closeModal('updateModal')">
         <div class="modal-content" style="text-align: center;">
             <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; font-weight: 900;">✨ Actualización Lista</h3>
             <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">Hay una nueva versión de Rummy Pro disponible con mejoras. ¿Deseas recargar la página para aplicarla?</p>
@@ -388,7 +392,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.7.7</div>
+    <div id="watermark">xTFEXx - v0.8.5</div>
 
     <script>
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
@@ -396,39 +400,56 @@
             localStorage.setItem('rummyProAutoSave', JSON.stringify({ state, liveInputs }));
         }
 
+        // --- SISTEMA DE CENTRADO INTELIGENTE (SCROLL) ---
+        function scrollIntoViewCenter(el, isCustom = false) {
+            // Retraso para dar tiempo a que los teclados (nativos o custom) se dibujen
+            let delay = isCustom ? 100 : 400; 
+            
+            setTimeout(() => {
+                const rect = el.getBoundingClientRect();
+                const absoluteTop = window.pageYOffset + rect.top;
+                let visibleHeight = window.innerHeight;
+                
+                if (isCustom) {
+                    const numpad = document.getElementById('customNumpad');
+                    visibleHeight = window.innerHeight - (numpad ? numpad.offsetHeight : 0);
+                } else if (window.visualViewport) {
+                    visibleHeight = window.visualViewport.height;
+                }
+                
+                // Centramos la casilla en la parte de la pantalla que NO está cubierta
+                const targetY = absoluteTop - (visibleHeight / 2) + (rect.height / 2);
+                window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+            }, delay); 
+        }
+
         // --- GESTIÓN DE HISTORIAL (BOTÓN DE RETROCESO) Y MODALES ---
-        let isHandlingPopstate = false;
+        let isProgrammaticBack = false;
 
         window.addEventListener('popstate', (e) => {
-            isHandlingPopstate = true;
+            if (isProgrammaticBack) {
+                isProgrammaticBack = false;
+                return;
+            }
             
             const numpad = document.getElementById('customNumpad');
             if (numpad.classList.contains('active')) {
-                numpad.classList.remove('active');
-                document.body.style.paddingBottom = "40px";
-                if(numpadActiveInput) numpadActiveInput.blur();
-                numpadActiveInput = null;
+                closeNumpadUI();
             } else {
                 const modals = Array.from(document.querySelectorAll('.modal.active'));
                 if (modals.length > 0) {
                     const topModal = modals[modals.length - 1];
-                    topModal.classList.remove('active');
-                    if (modals.length === 1) document.body.classList.remove('no-scroll');
-                    
-                    if (topModal.id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
-                    if (topModal.id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
+                    if (topModal.id !== 'updateModal') {
+                        closeModalUI(topModal.id);
+                    }
                 }
             }
-            
-            setTimeout(() => { isHandlingPopstate = false; }, 50);
         });
 
-        function pushUIState() {
-            history.pushState({ui: true}, "");
-        }
-
         function openModal(id) { 
-            pushUIState();
+            if (!document.getElementById(id).classList.contains('active')) {
+                history.pushState({ui: 'modal'}, "");
+            }
             document.getElementById(id).classList.add('active'); 
             document.body.classList.add('no-scroll'); 
         }
@@ -437,13 +458,18 @@
             const el = document.getElementById(id);
             if (!el.classList.contains('active')) return;
 
+            isProgrammaticBack = true;
+            history.back();
+            closeModalUI(id);
+        }
+
+        function closeModalUI(id) {
+            const el = document.getElementById(id);
             el.classList.remove('active'); 
             if (!document.querySelector('.modal.active')) { document.body.classList.remove('no-scroll'); } 
             
             if (id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
             if (id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
-            
-            if (!isHandlingPopstate) { history.back(); }
         }
 
         document.querySelectorAll('.modal').forEach(modal => {
@@ -483,31 +509,33 @@
             
             const numpad = document.getElementById('customNumpad');
             if (!numpad.classList.contains('active')) {
-                pushUIState();
+                history.pushState({ui: 'numpad'}, "");
                 numpad.classList.add('active');
             }
             
             setTimeout(() => {
                 const numpadHeight = numpad.offsetHeight;
-                document.body.style.paddingBottom = (numpadHeight + 20) + "px";
-                
-                const rect = inputEl.getBoundingClientRect();
-                const absoluteTop = window.pageYOffset + rect.top;
-                
-                const targetY = absoluteTop + rect.height - window.innerHeight + numpadHeight + 15;
-                window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-            }, 50); 
+                // Añade justo el padding necesario para que el teclado no tape el final de la página
+                document.body.style.paddingBottom = (numpadHeight + 20) + "px"; 
+                scrollIntoViewCenter(inputEl, true);
+            }, 10); 
         }
 
         function closeNumpad() {
             const numpad = document.getElementById('customNumpad');
             if (!numpad.classList.contains('active')) return;
             
+            isProgrammaticBack = true;
+            history.back();
+            closeNumpadUI();
+        }
+
+        function closeNumpadUI() {
+            const numpad = document.getElementById('customNumpad');
             numpad.classList.remove('active');
             document.body.style.paddingBottom = "40px"; 
+            if(numpadActiveInput) numpadActiveInput.blur();
             numpadActiveInput = null;
-            
-            if (!isHandlingPopstate) { history.back(); }
         }
 
         function closeNumpadDelay() {
@@ -529,7 +557,6 @@
                     numpadActiveInput.blur();
                     closeNumpad();
                 } else {
-                    // Lógica para saltar al siguiente jugador sin puntaje
                     let currentOrder = state.viewingRoundNum === state.currentRoundNum ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
                     let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
                     
@@ -888,23 +915,8 @@
             if (el.value !== val) { el.value = val; }
         }
 
-        function openModal(id) { 
-            pushUIState();
-            document.getElementById(id).classList.add('active'); 
-            document.body.classList.add('no-scroll'); 
-        }
-
-        function closeModal(id) { 
-            const el = document.getElementById(id);
-            if (!el.classList.contains('active')) return;
-
-            el.classList.remove('active'); 
-            if (!document.querySelector('.modal.active')) { document.body.classList.remove('no-scroll'); } 
-            
-            if (id === 'confirmModal' && currentConfirmResolve) { currentConfirmResolve(false); currentConfirmResolve = null; }
-            if (id === 'promptModal' && currentPromptResolve) { currentPromptResolve(null); currentPromptResolve = null; }
-            
-            if (!isHandlingPopstate) { history.back(); }
+        function windowAddPlayerKey(e) {
+            if (e.key === 'Enter') addPlayer();
         }
 
         window.addEventListener('beforeunload', function (e) { if (state.players.length > 0) { e.preventDefault(); e.returnValue = ''; return ''; } });
@@ -1178,9 +1190,21 @@
         function openLoadModal() {
             const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
             Object.keys(saves).forEach(k => { 
-                list.innerHTML += `<div class="save-item"><span class="text-truncate">${k}</span><div style="display:flex;gap:5px"><button class="primary action-small" onclick="loadGame('${k}')">Cargar</button><button class="outline-primary action-small" style="padding: 8px 10px;" onclick="renameSave('${k}')">✏️</button><button class="outline-primary action-small" style="padding: 8px 10px;" onclick="exportSingleSave('${k}')">💾</button><button class="danger action-small" style="padding: 8px 10px;" onclick="deleteSave('${k}')">🗑️</button></div></div>`; 
+                const safeKey = k.replace(/"/g, '&quot;');
+                list.innerHTML += `<div class="save-item">
+                    <span class="save-item-title">${k}</span>
+                    <div class="save-item-actions">
+                        <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
+                        <button class="outline-primary action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="renameSave(this.getAttribute('data-key'))">✏️</button>
+                        <button class="outline-primary action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="exportSingleSave(this.getAttribute('data-key'))">💾</button>
+                        <button class="danger action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="deleteSave(this.getAttribute('data-key'))">🗑️</button>
+                    </div>
+                </div>`; 
             });
-            openModal('loadModal');
+            
+            if (!document.getElementById('loadModal').classList.contains('active')) {
+                openModal('loadModal');
+            }
         }
 
         async function renameSave(oldKey) {
@@ -1202,6 +1226,15 @@
 
             openLoadModal();
             showToast("Partida renombrada.", "success");
+        }
+
+        async function deleteSave(key) { 
+            if(await customConfirm(`¿Seguro que deseas eliminar la partida "${key}" permanentemente?`, "Borrar Partida", true)) { 
+                const s = getSaves(); 
+                delete s[key]; 
+                localStorage.setItem('rummyProSaves', JSON.stringify(s)); 
+                openLoadModal(); 
+            } 
         }
 
         function openWinnerModal(mode, roundId) {
@@ -1531,13 +1564,13 @@
                     grid.innerHTML += `<div class="player-card ${tot >= state.config.win ? 'winner' : (tot >= state.config.lock ? 'locked' : '')}" id="card_${p.id}">
                         <div class="card-header">
                             <span class="card-num">#${idx + 1}</span>
-                            <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)">
+                            <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)" onfocus="scrollIntoViewCenter(this, false)">
                             <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')">X</button>
                         </div>
-                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', true)" onblur="closeNumpadDelay()" ${!isCurrent ? 'readonly' : ''}>
+                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input custom-keyboard-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') this.blur();" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', true)" onblur="closeNumpadDelay()" ${!isCurrent ? 'readonly' : ''}>
                         ${roleHtml}
                         ${cutHtml}
-                        <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" inputmode="none" id="score_input_${p.id}" class="standard-input round-score-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" onfocus="openNumpad(this, '${p.id}', false)" onblur="closeNumpadDelay()" ${inputDisabled}>
+                        <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" inputmode="none" id="score_input_${p.id}" class="standard-input round-score-input custom-keyboard-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" onfocus="openNumpad(this, '${p.id}', false)" onblur="closeNumpadDelay()" ${inputDisabled}>
                     </div>`;
                 } else { 
                     document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
@@ -1696,12 +1729,6 @@
                     state.viewingRoundNum = state.isGameOver ? Math.max(1, state.currentRoundNum - 1) : state.currentRoundNum;
                     renderApp(false, ''); syncAnnouncedTotals(); showToast("Partida cargada.", "success"); 
                 }
-            } 
-        }
-
-        async function deleteSave(key) { 
-            if(await customConfirm(`¿Seguro que deseas eliminar la partida "${key}" permanentemente?`, "Borrar Partida", true)) { 
-                const s = getSaves(); delete s[key]; localStorage.setItem('rummyProSaves', JSON.stringify(s)); openLoadModal(); 
             } 
         }
 
