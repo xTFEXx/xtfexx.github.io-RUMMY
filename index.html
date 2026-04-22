@@ -301,10 +301,10 @@
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; transition: border-color 0.4s ease;">
             <div class="config-sentence">
-                El jugador gana al llegar a <input type="text" pattern="[0-9]*" inputmode="none" id="cfgWin" class="inline-input custom-keyboard-input" value="1000" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ this.blur(); closeNumpad(); }" onfocus="openNumpad(this, 'cfgWin', 'config')" onblur="closeNumpadDelay()"> puntos.
+                El jugador gana al llegar a <input type="text" pattern="[0-9]*" inputmode="none" id="cfgWin" class="inline-input custom-keyboard-input" value="1000" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ this.blur(); closeNumpad(); }" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgWin', 'config')" onblur="closeNumpadDelay()"> puntos.
             </div>
             <div class="config-sentence">
-                El jugador se traba a los <input type="text" pattern="[0-9]*" inputmode="none" id="cfgLock" class="inline-input custom-keyboard-input" value="500" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ this.blur(); closeNumpad(); }" onfocus="openNumpad(this, 'cfgLock', 'config')" onblur="closeNumpadDelay()"> puntos.
+                El jugador se traba a los <input type="text" pattern="[0-9]*" inputmode="none" id="cfgLock" class="inline-input custom-keyboard-input" value="500" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ this.blur(); closeNumpad(); }" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgLock', 'config')" onblur="closeNumpadDelay()"> puntos.
             </div>
             <div style="color: var(--text-muted); font-size: 0.8rem; text-align: left; margin-top: 8px;">
                 * Estos valores pueden modificarse durante la partida
@@ -501,7 +501,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.9.0</div>
+    <div id="watermark">xTFEXx - v0.9.2</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -643,7 +643,7 @@
         }
 
         function openNumpad(inputEl, pId, inputType = 'score') {
-            if (inputEl.hasAttribute('readonly')) return; // No abrir teclado en celdas de lectura
+            if (inputEl.hasAttribute('readonly')) return; 
             
             if (!isMobileDevice()) {
                 inputEl.removeAttribute('inputmode');
@@ -653,7 +653,7 @@
             numpadActiveInput = inputEl;
             numpadPlayerId = pId;
             numpadInputType = inputType;
-            numpadActiveInput.dataset.origVal = inputEl.value; // Guardar valor original para detectar si hubo cambio
+            numpadActiveInput.dataset.origVal = inputEl.value; 
             
             const btnMinus = document.getElementById('btnNumpadMinus');
             if(inputType === 'config') {
@@ -692,11 +692,9 @@
             document.documentElement.style.setProperty('--kb-height', '0px'); 
             
             if(numpadActiveInput) {
-                // Si cerramos el teclado de Total y el valor cambió, disparamos el evento de cambio para que guarde
                 if (numpadInputType === 'total' && numpadActiveInput.value !== numpadActiveInput.dataset.origVal) {
                     numpadActiveInput.dispatchEvent(new Event('change'));
                 }
-                // Previene que se repita
                 numpadActiveInput.dataset.origVal = numpadActiveInput.value; 
                 numpadActiveInput.blur();
             }
@@ -1085,8 +1083,51 @@
             if (el.value !== val) { el.value = val; }
         }
 
-        function windowAddPlayerKey(e) {
-            if (e.key === 'Enter') addPlayer();
+        function handleScoreKeydown(e, playerId) {
+            if (state.viewingRoundNum === state.currentRoundNum && state.isGameOver) return;
+            if (['e', 'E', '+', '.', ','].includes(e.key)) { e.preventDefault(); return; }
+            
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                
+                const isCurrent = state.viewingRoundNum === state.currentRoundNum;
+                let currentOrder = isCurrent ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
+                let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+                
+                activePlayers.sort((a, b) => {
+                    let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
+                    if (idxA === -1) idxA = 999; if (idxB === -1) idxB = 999;
+                    return idxA - idxB;
+                });
+
+                let currentIndex = activePlayers.findIndex(p => p.id === playerId);
+                let nextPlayer = null;
+
+                for (let i = currentIndex + 1; i < activePlayers.length; i++) {
+                    let inp = document.getElementById(`score_input_${activePlayers[i].id}`);
+                    if (inp && (inp.value === '' || inp.value === '-')) {
+                        nextPlayer = activePlayers[i];
+                        break;
+                    }
+                }
+                
+                if (!nextPlayer) {
+                    for (let i = 0; i < currentIndex; i++) {
+                        let inp = document.getElementById(`score_input_${activePlayers[i].id}`);
+                        if (inp && (inp.value === '' || inp.value === '-')) {
+                            nextPlayer = activePlayers[i];
+                            break;
+                        }
+                    }
+                }
+
+                if (nextPlayer) {
+                    document.getElementById(`score_input_${nextPlayer.id}`).focus();
+                } else {
+                    document.getElementById(`score_input_${playerId}`).blur();
+                    if (isCurrent) commitRound();
+                }
+            }
         }
 
         window.addEventListener('beforeunload', function (e) { if (state.players.length > 0) { e.preventDefault(); e.returnValue = ''; return ''; } });
@@ -1389,18 +1430,24 @@
 
         function openLoadModal() {
             const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
-            Object.keys(saves).forEach(k => { 
-                const safeKey = k.replace(/"/g, '&quot;');
-                list.innerHTML += `<div class="save-item">
-                    <span class="save-item-title">${k}</span>
-                    <div class="save-item-actions">
-                        <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
-                        <button class="outline-primary action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="renameSave(this.getAttribute('data-key'))">✏️</button>
-                        <button class="outline-primary action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="exportSingleSave(this.getAttribute('data-key'))">💾</button>
-                        <button class="danger action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="deleteSave(this.getAttribute('data-key'))">🗑️</button>
-                    </div>
-                </div>`; 
-            });
+            
+            const keys = Object.keys(saves);
+            if (keys.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
+            } else {
+                keys.forEach(k => { 
+                    const safeKey = k.replace(/"/g, '&quot;');
+                    list.innerHTML += `<div class="save-item">
+                        <span class="save-item-title">${k}</span>
+                        <div class="save-item-actions">
+                            <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
+                            <button class="outline-primary action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="renameSave(this.getAttribute('data-key'))">✏️</button>
+                            <button class="outline-primary action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="exportSingleSave(this.getAttribute('data-key'))">💾</button>
+                            <button class="danger action-small" style="flex:1; padding: 8px 0;" data-key="${safeKey}" onclick="deleteSave(this.getAttribute('data-key'))">🗑️</button>
+                        </div>
+                    </div>`; 
+                });
+            }
             
             if (!document.getElementById('loadModal').classList.contains('active')) {
                 openModal('loadModal');
@@ -1426,6 +1473,16 @@
 
             openLoadModal();
             showToast("Partida renombrada.", "success");
+        }
+
+        async function deleteSave(key) { 
+            if(await customConfirm(`¿Seguro que deseas eliminar la partida "${key}" permanentemente?`, "Borrar Partida", true)) { 
+                const s = getSaves(); 
+                delete s[key]; 
+                localStorage.setItem('rummyProSaves', JSON.stringify(s)); 
+                openLoadModal(); 
+                showToast("Partida eliminada.", "success");
+            } 
         }
 
         function openWinnerModal(mode, roundId) {
