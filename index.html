@@ -164,7 +164,7 @@
 
         .round-nav { display: flex; overflow-x: auto; gap: 10px; padding: 15px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 15px 0 25px 0; }
         .nav-chip { background: var(--surface); border: 1px solid var(--border); color: #cbd5e1; padding: 10px 18px; border-radius: 25px; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.3s ease; }
-        .nav-chip.active { background: var(--primary); color: var(--theme-color); border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
+        .nav-chip.active { background: var(--primary); color: var(--bg-base); border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
         .nav-chip.new { background: rgba(255, 255, 255, 0.05); border: 2px dashed var(--primary); color: #ffffff; }
 
         #viewTitleContainer { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
@@ -242,14 +242,6 @@
         .theme-option { height: 55px; border-radius: 8px; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 0.65rem; flex-direction: column; gap: 4px; padding: 2px; text-align: center; }
         .theme-option.active { border-width: 3px; transform: scale(0.95); box-shadow: 0 0 15px var(--primary-glow); }
         .theme-color-preview { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); }
-
-        /* --- BOTÓN SWITCH PARA GIRO DE PANTALLA --- */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); }
 
         #watermark { position: absolute; bottom: 15px; right: 15px; color: rgba(255, 255, 255, 0.08); font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; pointer-events: none; z-index: 1000; user-select: none; text-transform: none; }
 
@@ -464,17 +456,6 @@
             <p style="text-align: center; margin-bottom: 20px; color: var(--text-muted); font-size: 0.95rem;">Personaliza tu experiencia y aspecto visual.</p>
             
             <div class="scrollable-list" style="margin-bottom: 20px;">
-                
-                <div id="orientationSetting" style="display: none; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">
-                    <div>
-                        <div style="font-weight: bold; font-size: 1.1rem;">📱 Giro Automático</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Permitir que el juego gire en horizontal</div>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="autoRotateToggle" onchange="toggleAutoRotate()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
 
                 <div style="font-weight: bold; margin-bottom: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;">Paleta de Colores</div>
                 <div class="theme-grid">
@@ -554,7 +535,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.9.3</div>
+    <div id="watermark">xTFEXx - v0.9.4</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -583,34 +564,6 @@
                 const styles = getComputedStyle(document.body);
                 metaThemeColor.setAttribute('content', styles.getPropertyValue('--theme-color').trim());
             }
-        }
-
-        // --- SISTEMA DE ORIENTACIÓN DE PANTALLA (PWA) ---
-        let autoRotate = localStorage.getItem('rummyProAutoRotate') !== 'false';
-
-        function isPWA() {
-            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        }
-
-        function applyOrientationLock() {
-            if (!isMobileDevice() || !isPWA()) return;
-            try {
-                if (autoRotate) {
-                    if (screen.orientation && screen.orientation.unlock) {
-                        screen.orientation.unlock();
-                    }
-                } else {
-                    if (screen.orientation && screen.orientation.lock) {
-                        screen.orientation.lock('portrait').catch(err => console.log('Orientation lock ignory'));
-                    }
-                }
-            } catch (e) { }
-        }
-
-        function toggleAutoRotate() {
-            autoRotate = document.getElementById('autoRotateToggle').checked;
-            localStorage.setItem('rummyProAutoRotate', autoRotate);
-            applyOrientationLock();
         }
 
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
@@ -1032,6 +985,35 @@
             setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 380); 
         }
 
+        // --- SISTEMA PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    if (reg.waiting) { reg.waiting.postMessage({ action: 'skipWaiting' }); }
+                    
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                newWorker.postMessage({ action: 'skipWaiting' });
+                            }
+                        });
+                    });
+                }).catch(err => console.log('SW no registrado', err));
+
+                let refreshing;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    refreshing = true;
+                    window.location.reload();
+                });
+            });
+            
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') { navigator.serviceWorker.ready.then(reg => reg.update()); }
+            });
+        }
+
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [], isGameOver: false };
@@ -1042,14 +1024,6 @@
         window.onload = () => { 
             updatePlaceholder(); 
             initTheme();
-            
-            document.getElementById('autoRotateToggle').checked = autoRotate;
-            if (isMobileDevice() && isPWA()) {
-                document.getElementById('orientationSetting').style.display = 'flex';
-                applyOrientationLock();
-            } else {
-                document.getElementById('orientationSetting').style.display = 'none';
-            }
             
             const savedData = localStorage.getItem('rummyProAutoSave');
             if (savedData) {
