@@ -33,7 +33,7 @@
             --radius: 12px;
             --kb-height: 0px; 
             --glass-blur: 0px; 
-            --modal-bg: rgba(0,0,0,0.85); /* Fondo oscuro para modales por defecto */
+            --modal-bg: rgba(0,0,0,0.85);
         }
 
         /* --- FILA 1: COLORES SÓLIDOS CLÁSICOS --- */
@@ -101,7 +101,7 @@
         .bubble-6 { left: 20%; width: 18px; height: 18px; animation: floatUpBubble 15s infinite linear; animation-delay: 9s; }
         .bubble-7 { left: 75%; width: 22px; height: 22px; animation: floatUpBubble 13s infinite linear; animation-delay: 11s; }
 
-        /* --- FILA 3: FONDOS COMPLEJOS Y EFECTO CRISTAL (MÁS TRANSLÚCIDOS) --- */
+        /* --- FILA 3: FONDOS COMPLEJOS Y EFECTO CRISTAL --- */
         body[data-theme="neon"] {
             --theme-color: #3b0764;
             --bg-base: 
@@ -216,7 +216,9 @@
         
         .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .card-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: background-color 0.4s ease, border-color 0.4s ease; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); position: relative; z-index: 10; }
+        .card-panel { position: relative; z-index: 10; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: background-color 0.4s ease, border-color 0.4s ease; }
+        .card-panel::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
+        
         .flex-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; }
         
@@ -248,7 +250,8 @@
         button.action-small { padding: 8px 12px; font-size: 0.85rem; }
 
         .round-nav { position: relative; z-index: 10; display: flex; overflow-x: auto; gap: 10px; padding: 15px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 15px 0 25px 0; }
-        .nav-chip { background: var(--surface); border: 1px solid var(--border); color: #cbd5e1; padding: 10px 18px; border-radius: 25px; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.3s ease; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); }
+        .nav-chip { position: relative; background: var(--surface); border: 1px solid var(--border); color: #cbd5e1; padding: 10px 18px; border-radius: 25px; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.3s ease; }
+        .nav-chip::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
         .nav-chip.active { background: var(--primary); color: var(--theme-color); border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
         .nav-chip.new { background: rgba(255, 255, 255, 0.05); border: 2px dashed var(--primary); color: #ffffff; }
 
@@ -263,13 +266,15 @@
         @keyframes slideOutForward { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-30px); } }
         @keyframes slideOutBackward { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(30px); } }
 
-        .slide-forward { animation: slideInForward 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
-        .slide-backward { animation: slideInBackward 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
-        .slide-out-forward { animation: slideOutForward 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
-        .slide-out-backward { animation: slideOutBackward 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        .slide-forward { animation: slideInForward 0.8s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .slide-backward { animation: slideInBackward 0.8s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .slide-out-forward { animation: slideOutForward 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .slide-out-backward { animation: slideOutBackward 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); }
 
         /* --- TARJETAS SÓLIDAS TEMÁTICAS --- */
-        .player-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); }
+        .player-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; align-items: center; position: relative; transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .player-card::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: 0; border-radius: inherit; }
+        .player-card > * { z-index: 1; }
         .player-card.locked { border-color: var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
         .player-card.locked input.total-score-input { color: var(--danger); text-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
         .player-card.winner { border-color: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
@@ -289,7 +294,8 @@
         .float-anim { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: var(--gold); font-weight: 900; font-size: 3rem; text-shadow: 0 0 20px #000; pointer-events: none; z-index: 10; animation: floatUp 0.8s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1.2); } }
 
-        .table-container { position: relative; z-index: 10; width: 100%; overflow-x: auto; margin-top: 15px; margin-bottom: 25px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.4s ease, border-color 0.4s ease; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); }
+        .table-container { position: relative; z-index: 10; width: 100%; overflow-x: auto; margin-top: 15px; margin-bottom: 25px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.4s ease, border-color 0.4s ease; }
+        .table-container::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.95rem; }
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
         th { background: rgba(0,0,0,0.6); color: var(--text-main); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
@@ -371,6 +377,7 @@
             max-width: 500px; margin: 0 auto; height: 100%;
         }
         .numpad-btn {
+            position: relative;
             background: var(--surface); color: white;
             font-size: 1.6rem; font-weight: bold;
             border: 1px solid var(--border); border-radius: 8px;
@@ -379,6 +386,7 @@
             transition: background 0.1s, transform 0.1s, border-color 0.4s ease;
             touch-action: none; user-select: none; -webkit-user-select: none;
         }
+        .numpad-btn::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
         .numpad-btn.pressed { background: var(--primary); color: var(--theme-color); transform: scale(0.95); }
         .numpad-action { background: var(--surface-hover); color: var(--warning); font-size: 1.4rem; transition: opacity 0.2s ease; }
         .numpad-enter { background: var(--success); color: white; border: none; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; grid-column: span 3; }
@@ -389,6 +397,8 @@
     <div id="bg-aurora" class="bg-particles">
         <div class="stars-1"></div><div class="stars-2"></div><div class="stars-3"></div>
     </div>
+    <div id="bg-eclipse" class="bg-particles">
+        </div>
     <div id="bg-deepsea" class="bg-particles">
         <div class="bubbles">
             <div class="bubble bubble-1"></div><div class="bubble bubble-2"></div>
@@ -438,7 +448,7 @@
                 👥 Nuevo Jugador
             </div>
             <div class="flex-row">
-                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeypress="if(event.key === 'Enter') addPlayer()" onfocus="scrollIntoViewCenter(this, false)">
+                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeydown="if(event.key === 'Enter') addPlayer()" onfocus="scrollIntoViewCenter(this, false)">
                 <button onclick="addPlayer()" class="outline-primary action-small" style="flex: 1; height: 48px;">+ Añadir</button>
                 <button onclick="openOrderModal()" id="btnOrderPlayers" class="outline-primary action-small" style="flex: 1; height: 48px;">↕️ Reordenar</button>
             </div>
@@ -451,7 +461,7 @@
 
     <div id="gameBoard">
         <h3 style="margin-top: 10px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
-        <div class="table-container">
+        <div class="table-container" id="historyTableContainer">
             <table id="historyTable"></table>
         </div>
 
@@ -558,7 +568,6 @@
             <p style="text-align: center; margin-bottom: 20px; color: var(--text-muted); font-size: 0.95rem;">Personaliza tu experiencia y aspecto visual.</p>
             
             <div class="scrollable-list" style="margin-bottom: 20px;">
-
                 <div style="font-weight: bold; margin-bottom: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;">Paleta de Colores</div>
                 <div class="theme-grid">
                     <div class="theme-option" data-theme="default" onclick="setTheme('default')" style="background: linear-gradient(145deg, #0f172a, #1e293b); border-color: #38bdf8;">
@@ -615,7 +624,29 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.9.8</div>
+    <div id="customNumpad" class="numpad-container">
+        <div class="numpad-grid">
+            <button class="numpad-btn" data-key="1">1</button>
+            <button class="numpad-btn" data-key="2">2</button>
+            <button class="numpad-btn" data-key="3">3</button>
+            
+            <button class="numpad-btn" data-key="4">4</button>
+            <button class="numpad-btn" data-key="5">5</button>
+            <button class="numpad-btn" data-key="6">6</button>
+            
+            <button class="numpad-btn" data-key="7">7</button>
+            <button class="numpad-btn" data-key="8">8</button>
+            <button class="numpad-btn" data-key="9">9</button>
+            
+            <button class="numpad-btn numpad-action" data-key="-" id="btnNumpadMinus">+/-</button>
+            <button class="numpad-btn" data-key="0">0</button>
+            <button class="numpad-btn numpad-action" data-key="Backspace" id="btnNumpadDel">⌫</button>
+            
+            <button class="numpad-btn numpad-enter" data-key="Enter">Aceptar</button>
+        </div>
+    </div>
+
+    <div id="watermark">xTFEXx - v0.9.9</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1300,9 +1331,9 @@
             const currentHeight = grid.offsetHeight;
             if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             
-            // FIX: Ensure blur stays solid by not using "forwards"
-            grid.innerHTML = ''; 
-            grid.classList.remove('slide-forward', 'slide-backward', 'slide-out-forward', 'slide-out-backward'); 
+            // Vaciamos primero y eliminamos clases conflictivas de forma atómica para conservar el Blur
+            grid.innerHTML = '';
+            grid.className = 'grid'; 
             void grid.offsetWidth; 
             
             if (direction) grid.classList.add(`slide-${direction}`);
@@ -1313,7 +1344,7 @@
             
             setTimeout(() => {
                 grid.classList.remove(`slide-${direction}`);
-            }, 850);
+            }, 850); // Mismo tiempo que dura la animación CSS
             
             callback();
         }
@@ -1368,15 +1399,22 @@
 
         function openOrderModal() {
             if (state.players.length < 2) return showToast("Se necesitan al menos 2 jugadores para ordenarlos.", "warning");
-            const list = document.getElementById('orderList'); list.innerHTML = '';
+            
+            let listHtml = '';
             let currentOrder = state.playerOrder || state.players.map(p => p.id);
             let activePlayers = currentOrder.map(id => state.players.find(p => p.id === id)).filter(p => p && p.joinRound <= state.currentRoundNum);
+            
             activePlayers.forEach((p, idx) => {
-                let div = document.createElement('div'); div.className = 'drag-item'; div.dataset.id = p.id;
-                div.innerHTML = `<span class="drag-handle" title="Agarra y arrastra">☰</span><span class="order-num">${idx + 1}.</span><span class="text-truncate" style="flex:1; font-weight:bold; font-size:1.2rem; text-align:center; padding-right:35px;">${p.name}</span>`;
-                list.appendChild(div);
+                listHtml += `<div class="drag-item" data-id="${p.id}">
+                    <span class="drag-handle" title="Agarra y arrastra">☰</span>
+                    <span class="order-num">${idx + 1}.</span>
+                    <span class="text-truncate" style="flex:1; font-weight:bold; font-size:1.2rem; text-align:center; padding-right:35px;">${p.name}</span>
+                </div>`;
             });
-            enableCustomDrag(); openModal('orderModal');
+            document.getElementById('orderList').innerHTML = listHtml;
+            
+            enableCustomDrag(); 
+            openModal('orderModal');
         }
 
         function confirmOrder() {
@@ -1414,11 +1452,12 @@
                 return;
             }
 
+            input.value = ''; // Limpiamos inmediatamente para evitar doble ejecución si se mantiene presionado el enter
+            
             let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id))) : 0;
             let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
             state.players.push(newPlayer);
             state.playerOrder.push(newPlayer.id); 
-            input.value = '';
             
             if(state.viewingRoundNum !== state.currentRoundNum) {
                 undoRoundChanges(true); 
@@ -1556,15 +1595,17 @@
         }
 
         function openLoadModal() {
-            const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
+            const saves = getSaves(); 
+            const list = document.getElementById('savesList'); 
+            let listHtml = '';
             
             const keys = Object.keys(saves);
             if (keys.length === 0) {
-                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
+                listHtml = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
             } else {
                 keys.forEach(k => { 
                     const safeKey = k.replace(/"/g, '&quot;');
-                    list.innerHTML += `<div class="save-item">
+                    listHtml += `<div class="save-item">
                         <span class="save-item-title">${k}</span>
                         <div class="save-item-actions">
                             <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
@@ -1575,6 +1616,7 @@
                     </div>`; 
                 });
             }
+            list.innerHTML = listHtml;
             
             if (!document.getElementById('loadModal').classList.contains('active')) {
                 openModal('loadModal');
@@ -1634,22 +1676,22 @@
                 return idxA - idxB;
             });
 
-            const pContainer = document.getElementById('winnerPlayerSelect');
-            pContainer.innerHTML = '';
+            let pContainerHtml = '';
             activePlayers.forEach((p, idx) => {
                 const isSelected = tempWinner.id === p.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
+                pContainerHtml += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
             });
+            document.getElementById('winnerPlayerSelect').innerHTML = pContainerHtml;
 
-            const tContainer = document.getElementById('winnerTypeSelect');
-            tContainer.innerHTML = '';
+            let tContainerHtml = '';
             const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+                tContainerHtml += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
             });
+            document.getElementById('winnerTypeSelect').innerHTML = tContainerHtml;
         }
 
         function animateValue(element, start, end, duration) {
@@ -1863,10 +1905,12 @@
         }
 
         function renderNav() {
-            const nav = document.getElementById('roundNav'); nav.innerHTML = '';
-            state.rounds.forEach(r => nav.innerHTML += `<div class="nav-chip ${r.id === state.viewingRoundNum ? 'active' : ''}" onclick="goToRound(${r.id})">Ronda ${r.id}</div>`);
+            const nav = document.getElementById('roundNav');
+            let navHtml = '';
+            state.rounds.forEach(r => navHtml += `<div class="nav-chip ${r.id === state.viewingRoundNum ? 'active' : ''}" onclick="goToRound(${r.id})">Ronda ${r.id}</div>`);
             
-            nav.innerHTML += `<div class="nav-chip new ${state.currentRoundNum === state.viewingRoundNum ? 'active' : ''}" onclick="goToRound(${state.currentRoundNum})">+ Actual (R${state.currentRoundNum})</div>`;
+            navHtml += `<div class="nav-chip new ${state.currentRoundNum === state.viewingRoundNum ? 'active' : ''}" onclick="goToRound(${state.currentRoundNum})">+ Actual (R${state.currentRoundNum})</div>`;
+            nav.innerHTML = navHtml;
             
             document.getElementById('viewTitle').innerHTML = state.viewingRoundNum === state.currentRoundNum ? `<span style="color: var(--primary);">📍 Ronda Actual: ${state.currentRoundNum}</span>` : `<span style="color: var(--warning);">🕒 Editando R${state.viewingRoundNum}</span>`;
         }
@@ -1876,8 +1920,15 @@
             const bannerCont = document.getElementById('pastRoundBannerContainer');
             
             if(!keepFocus) {
+                closeNumpadUI(); // CRITICAL: Release any active inputs that are about to be destroyed
                 const currentHeight = grid.offsetHeight;
                 if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
+
+                grid.innerHTML = ''; 
+                grid.className = 'grid'; 
+                void grid.offsetWidth; 
+                if (direction) grid.classList.add(`slide-${direction}`);
+                setTimeout(() => { grid.style.minHeight = ''; }, 50);
             }
 
             const isCurrent = state.viewingRoundNum === state.currentRoundNum;
@@ -1908,6 +1959,8 @@
             const mano = (dealer + 1) % Math.max(1, activePlayers.length);
             const cutter = (dealer - 1 + activePlayers.length) % Math.max(1, activePlayers.length);
 
+            let cardsHtml = '';
+
             activePlayers.forEach((p, idx) => {
                 const tot = calculateTotal(p.id);
                 let role = '';
@@ -1936,7 +1989,7 @@
                 const cutHtml = `<button tabindex="-1" class="cut-btn ${curCut ? 'active' : ''}" style="${cutVisibility} ${cutDisabledStyle}" ${inputDisabled ? "disabled" : ""} onclick="toggleCut('${p.id}','card_${p.id}')">${curCut ? 'Corte Activado (+50)' : 'Corte Perfecto'}</button>`;
 
                 if(!keepFocus) {
-                    grid.innerHTML += `<div class="player-card ${tot >= state.config.win ? 'winner' : (tot >= state.config.lock ? 'locked' : '')}" id="card_${p.id}">
+                    cardsHtml += `<div class="player-card ${tot >= state.config.win ? 'winner' : (tot >= state.config.lock ? 'locked' : '')}" id="card_${p.id}">
                         <div class="card-header">
                             <span class="card-num">#${idx + 1}</span>
                             <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)" onfocus="scrollIntoViewCenter(this, false)">
@@ -1948,40 +2001,50 @@
                         <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" inputmode="none" id="score_input_${p.id}" class="standard-input round-score-input custom-keyboard-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" onfocus="openNumpad(this, '${p.id}', 'score')" onblur="closeNumpadDelay()" ${inputDisabled}>
                     </div>`;
                 } else { 
-                    document.querySelector(`#card_${p.id} .total-score-input`).value = tot; 
-                    document.querySelector(`#card_${p.id} .ghost`).value = p.name;
+                    const totInput = document.querySelector(`#card_${p.id} .total-score-input`);
+                    if(totInput) totInput.value = tot; 
+                    
+                    const nameInput = document.querySelector(`#card_${p.id} .ghost`);
+                    if(nameInput) nameInput.value = p.name;
+                    
                     const cardEl = document.getElementById(`card_${p.id}`);
-                    cardEl.classList.remove('winner', 'locked');
-                    if (tot >= state.config.win) cardEl.classList.add('winner');
-                    else if (tot >= state.config.lock) cardEl.classList.add('locked');
+                    if(cardEl) {
+                        cardEl.classList.remove('winner', 'locked');
+                        if (tot >= state.config.win) cardEl.classList.add('winner');
+                        else if (tot >= state.config.lock) cardEl.classList.add('locked');
 
-                    const cutBtn = cardEl.querySelector('.cut-btn');
-                    if (cutBtn) {
-                        if (curCut) { cutBtn.classList.add('active'); cutBtn.innerText = 'Corte Activado (+50)'; } 
-                        else { cutBtn.classList.remove('active'); cutBtn.innerText = 'Corte Perfecto'; }
-                        
-                        if (isCurrent && state.isGameOver) {
-                            cutBtn.style.pointerEvents = 'none';
-                            cutBtn.style.opacity = '0.5';
-                        } else {
-                            cutBtn.style.pointerEvents = 'auto';
-                            cutBtn.style.opacity = '1';
+                        const cutBtn = cardEl.querySelector('.cut-btn');
+                        if (cutBtn) {
+                            if (curCut) { cutBtn.classList.add('active'); cutBtn.innerText = 'Corte Activado (+50)'; } 
+                            else { cutBtn.classList.remove('active'); cutBtn.innerText = 'Corte Perfecto'; }
+                            
+                            if (isCurrent && state.isGameOver) {
+                                cutBtn.style.pointerEvents = 'none';
+                                cutBtn.style.opacity = '0.5';
+                            } else {
+                                cutBtn.style.pointerEvents = 'auto';
+                                cutBtn.style.opacity = '1';
+                            }
                         }
-                    }
 
-                    const scoreInput = document.getElementById(`score_input_${p.id}`);
-                    if (scoreInput) {
-                        if (document.activeElement !== scoreInput) {
-                            scoreInput.value = curScore !== undefined ? curScore : '';
-                        }
-                        if (inputDisabled) {
-                            scoreInput.setAttribute('disabled', 'disabled');
-                        } else {
-                            scoreInput.removeAttribute('disabled');
+                        const scoreInput = document.getElementById(`score_input_${p.id}`);
+                        if (scoreInput) {
+                            if (document.activeElement !== scoreInput) {
+                                scoreInput.value = curScore !== undefined ? curScore : '';
+                            }
+                            if (inputDisabled) {
+                                scoreInput.setAttribute('disabled', 'disabled');
+                            } else {
+                                scoreInput.removeAttribute('disabled');
+                            }
                         }
                     }
                 }
             });
+            
+            if(!keepFocus) {
+                grid.innerHTML = cardsHtml;
+            }
             
             let actionHtml = '';
             if (isCurrent) {
