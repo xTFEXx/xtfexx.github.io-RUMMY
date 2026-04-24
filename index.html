@@ -303,6 +303,7 @@
         input.ghost { background: transparent; border: 1px dashed transparent; color: #ffffff; font-weight: bold; font-size: inherit; width: 100%; text-align: center; padding: 4px; transition: 0.2s; outline: none; }
 
         input.total-score-input { background: transparent; border: 2px dashed transparent; color: #ffffff; font-size: 2.5rem; font-weight: 900; margin: 2px 0 8px 0; width: 100%; text-align: center; text-shadow: 0 2px 5px rgba(0,0,0,0.8); outline: none; border-radius: 8px; transition: color 0.3s ease, text-shadow 0.3s ease, border-color 0.2s ease, background 0.2s ease; padding: 0; display: block; cursor: text; }
+        input.total-score-input:read-only { cursor: default; }
         input.round-score-input:disabled { background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.1); }
 
         button { background: var(--surface-hover); color: #ffffff; border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 0.95rem; transition: 0.2s; display: flex; justify-content: center; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -498,10 +499,10 @@
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; transition: border-color 0.4s ease;">
             <div class="config-sentence">
-                El jugador gana al llegar a <input type="text" pattern="[0-9]*" inputmode="none" id="cfgWin" class="inline-input custom-keyboard-input" value="1000" onkeydown="blockConfigChars(event);" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgWin', 'config')" onblur="closeNumpadDelay()"> puntos.
+                El jugador gana al llegar a <input type="text" pattern="[0-9]*" inputmode="none" id="cfgWin" class="inline-input custom-keyboard-input" value="1000" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ event.preventDefault(); event.stopPropagation(); this.blur(); closeNumpad(); }" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgWin', 'config')" onblur="closeNumpadDelay()"> puntos.
             </div>
             <div class="config-sentence">
-                El jugador se traba a los <input type="text" pattern="[0-9]*" inputmode="none" id="cfgLock" class="inline-input custom-keyboard-input" value="500" onkeydown="blockConfigChars(event);" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgLock', 'config')" onblur="closeNumpadDelay()"> puntos.
+                El jugador se traba a los <input type="text" pattern="[0-9]*" inputmode="none" id="cfgLock" class="inline-input custom-keyboard-input" value="500" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ event.preventDefault(); event.stopPropagation(); this.blur(); closeNumpad(); }" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgLock', 'config')" onblur="closeNumpadDelay()"> puntos.
             </div>
             <div style="color: var(--text-muted); font-size: 0.8rem; text-align: left; margin-top: 8px;">
                 * Estos valores pueden modificarse durante la partida
@@ -711,7 +712,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.10.4</div>
+    <div id="watermark">xTFEXx - v0.10.5</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -852,7 +853,7 @@
                     else if (activeModal.id === 'settingsModal') closeModal('settingsModal');
                     else if (activeModal.id === 'loadModal') closeModal('loadModal');
                 }
-                return; // Bloquear procesamiento extra si hay modal abierto
+                return; 
             }
         });
 
@@ -1075,6 +1076,7 @@
             });
         });
 
+        // --- SISTEMA DE DIÁLOGOS Y TOASTS ---
         let currentConfirmResolve = null;
         let currentPromptResolve = null;
 
@@ -1136,6 +1138,14 @@
                     const res = currentPromptResolve; currentPromptResolve = null;
                     closeModal('promptModal'); if(res) res(null);
                 });
+                
+                input.onkeydown = (e) => { 
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        triggerOk();
+                    }
+                };
                 
                 openModal('promptModal');
                 setTimeout(() => input.focus(), 100);
@@ -1203,7 +1213,6 @@
 
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
-        // Se inicializa con property adjustments
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [], isGameOver: false };
         let liveInputs = { scores: {}, cuts: {}, adjustments: {} };
         let pendingWinnerAction = { mode: '', roundId: null };
@@ -1302,7 +1311,11 @@
         }
 
         function windowAddPlayerKey(e) {
-            if (e.key === 'Enter') addPlayer();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                addPlayer();
+            }
         }
 
         function handleScoreKeydown(e, playerId) {
@@ -1311,6 +1324,7 @@
             
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
+                e.stopPropagation();
                 
                 const isCurrent = state.viewingRoundNum === state.currentRoundNum;
                 let currentOrder = isCurrent ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
@@ -1526,11 +1540,12 @@
                 return;
             }
 
+            input.value = ''; 
+            
             let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id, state.currentRoundNum))) : 0;
             let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
             state.players.push(newPlayer);
             state.playerOrder.push(newPlayer.id); 
-            input.value = '';
             
             if(state.viewingRoundNum !== state.currentRoundNum) {
                 undoRoundChanges(true); 
@@ -1680,15 +1695,17 @@
         }
 
         function openLoadModal() {
-            const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
+            const saves = getSaves(); 
+            const list = document.getElementById('savesList'); 
+            let listHtml = '';
             
             const keys = Object.keys(saves);
             if (keys.length === 0) {
-                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
+                listHtml = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
             } else {
                 keys.forEach(k => { 
                     const safeKey = k.replace(/"/g, '&quot;');
-                    list.innerHTML += `<div class="save-item">
+                    listHtml += `<div class="save-item">
                         <span class="save-item-title">${k}</span>
                         <div class="save-item-actions">
                             <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
@@ -1699,6 +1716,7 @@
                     </div>`; 
                 });
             }
+            list.innerHTML = listHtml;
             
             if (!document.getElementById('loadModal').classList.contains('active')) {
                 openModal('loadModal');
@@ -1758,22 +1776,22 @@
                 return idxA - idxB;
             });
 
-            const pContainer = document.getElementById('winnerPlayerSelect');
-            pContainer.innerHTML = '';
+            let pContainerHtml = '';
             activePlayers.forEach((p, idx) => {
                 const isSelected = tempWinner.id === p.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
+                pContainerHtml += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
             });
+            document.getElementById('winnerPlayerSelect').innerHTML = pContainerHtml;
 
-            const tContainer = document.getElementById('winnerTypeSelect');
-            tContainer.innerHTML = '';
+            let tContainerHtml = '';
             const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+                tContainerHtml += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
             });
+            document.getElementById('winnerTypeSelect').innerHTML = tContainerHtml;
         }
 
         function animateValue(element, start, end, duration) {
@@ -2078,7 +2096,7 @@
                             <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)" onfocus="scrollIntoViewCenter(this, false)">
                             <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')">X</button>
                         </div>
-                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input custom-keyboard-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') { this.blur(); closeNumpad(); }" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', 'total')" onblur="closeNumpadDelay()">
+                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input custom-keyboard-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); this.blur(); closeNumpad(); }" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', 'total')" onblur="closeNumpadDelay()">
                         ${roleHtml}
                         ${cutHtml}
                         <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" inputmode="none" id="score_input_${p.id}" class="standard-input round-score-input custom-keyboard-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" onfocus="openNumpad(this, '${p.id}', 'score')" onblur="closeNumpadDelay()" ${inputDisabled}>
