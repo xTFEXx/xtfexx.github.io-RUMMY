@@ -303,7 +303,6 @@
         input.ghost { background: transparent; border: 1px dashed transparent; color: #ffffff; font-weight: bold; font-size: inherit; width: 100%; text-align: center; padding: 4px; transition: 0.2s; outline: none; }
 
         input.total-score-input { background: transparent; border: 2px dashed transparent; color: #ffffff; font-size: 2.5rem; font-weight: 900; margin: 2px 0 8px 0; width: 100%; text-align: center; text-shadow: 0 2px 5px rgba(0,0,0,0.8); outline: none; border-radius: 8px; transition: color 0.3s ease, text-shadow 0.3s ease, border-color 0.2s ease, background 0.2s ease; padding: 0; display: block; cursor: text; }
-        input.total-score-input:read-only { cursor: default; }
         input.round-score-input:disabled { background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.1); }
 
         button { background: var(--surface-hover); color: #ffffff; border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 0.95rem; transition: 0.2s; display: flex; justify-content: center; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -499,10 +498,10 @@
         
         <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; transition: border-color 0.4s ease;">
             <div class="config-sentence">
-                El jugador gana al llegar a <input type="text" pattern="[0-9]*" inputmode="none" id="cfgWin" class="inline-input custom-keyboard-input" value="1000" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ this.blur(); closeNumpad(); }" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgWin', 'config')" onblur="closeNumpadDelay()"> puntos.
+                El jugador gana al llegar a <input type="text" pattern="[0-9]*" inputmode="none" id="cfgWin" class="inline-input custom-keyboard-input" value="1000" onkeydown="blockConfigChars(event);" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgWin', 'config')" onblur="closeNumpadDelay()"> puntos.
             </div>
             <div class="config-sentence">
-                El jugador se traba a los <input type="text" pattern="[0-9]*" inputmode="none" id="cfgLock" class="inline-input custom-keyboard-input" value="500" onkeydown="blockConfigChars(event); if(event.key === 'Enter'){ this.blur(); closeNumpad(); }" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgLock', 'config')" onblur="closeNumpadDelay()"> puntos.
+                El jugador se traba a los <input type="text" pattern="[0-9]*" inputmode="none" id="cfgLock" class="inline-input custom-keyboard-input" value="500" onkeydown="blockConfigChars(event);" oninput="sanitizeConfigInput(this); updateConfig();" onfocus="openNumpad(this, 'cfgLock', 'config')" onblur="closeNumpadDelay()"> puntos.
             </div>
             <div style="color: var(--text-muted); font-size: 0.8rem; text-align: left; margin-top: 8px;">
                 * Estos valores pueden modificarse durante la partida
@@ -514,7 +513,7 @@
                 👥 Nuevo Jugador
             </div>
             <div class="flex-row">
-                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeypress="if(event.key === 'Enter') addPlayer()" onfocus="scrollIntoViewCenter(this, false)">
+                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeydown="windowAddPlayerKey(event)" onfocus="scrollIntoViewCenter(this, false)">
                 <button onclick="addPlayer()" class="outline-primary action-small" style="flex: 1; height: 48px;">+ Añadir</button>
                 <button onclick="openOrderModal()" id="btnOrderPlayers" class="outline-primary action-small" style="flex: 1; height: 48px;">↕️ Reordenar</button>
             </div>
@@ -634,7 +633,6 @@
             <p style="text-align: center; margin-bottom: 20px; color: var(--text-muted); font-size: 0.95rem;">Personaliza tu experiencia y aspecto visual.</p>
             
             <div class="scrollable-list" style="margin-bottom: 20px;">
-
                 <div style="font-weight: bold; margin-bottom: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;">Paleta de Colores</div>
                 <div class="theme-grid">
                     <div class="theme-option" data-theme="default" onclick="setTheme('default')" style="background: linear-gradient(145deg, #0f172a, #1e293b); border-color: #38bdf8;">
@@ -713,7 +711,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.10.3</div>
+    <div id="watermark">xTFEXx - v0.10.4</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -837,10 +835,24 @@
             });
         });
 
+        // --- MANEJO UNIVERSAL DEL TECLADO PC (ENTER / ESCAPE) ---
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const activeModal = document.querySelector('.modal.active');
-                if (activeModal && activeModal.id !== 'updateModal') closeModal(activeModal.id);
+            const activeModal = document.querySelector('.modal.active');
+            if (activeModal) {
+                if (e.key === 'Escape' && activeModal.id !== 'updateModal') {
+                    closeModal(activeModal.id);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeModal.id === 'confirmModal') document.getElementById('confirmOkBtn').click();
+                    else if (activeModal.id === 'promptModal') document.getElementById('promptOkBtn').click();
+                    else if (activeModal.id === 'winnerModal') confirmWinner();
+                    else if (activeModal.id === 'orderModal') confirmOrder();
+                    else if (activeModal.id === 'updateModal') applyUpdate();
+                    else if (activeModal.id === 'podiumModal') promptNewGame();
+                    else if (activeModal.id === 'settingsModal') closeModal('settingsModal');
+                    else if (activeModal.id === 'loadModal') closeModal('loadModal');
+                }
+                return; // Bloquear procesamiento extra si hay modal abierto
             }
         });
 
@@ -1063,7 +1075,6 @@
             });
         });
 
-        // --- SISTEMA DE DIÁLOGOS Y TOASTS ---
         let currentConfirmResolve = null;
         let currentPromptResolve = null;
 
@@ -1125,8 +1136,6 @@
                     const res = currentPromptResolve; currentPromptResolve = null;
                     closeModal('promptModal'); if(res) res(null);
                 });
-                
-                input.onkeydown = (e) => { if (e.key === 'Enter') triggerOk(); };
                 
                 openModal('promptModal');
                 setTimeout(() => input.focus(), 100);
@@ -1194,8 +1203,9 @@
 
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
+        // Se inicializa con property adjustments
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [], isGameOver: false };
-        let liveInputs = { scores: {}, cuts: {} };
+        let liveInputs = { scores: {}, cuts: {}, adjustments: {} };
         let pendingWinnerAction = { mode: '', roundId: null };
         let tempWinner = { id: null, type: 'normal', points: 50 };
 
@@ -1209,7 +1219,8 @@
                     const parsed = JSON.parse(savedData);
                     if (parsed.state && parsed.state.players) {
                         state = parsed.state;
-                        liveInputs = parsed.liveInputs || { scores: {}, cuts: {} };
+                        liveInputs = parsed.liveInputs || { scores: {}, cuts: {}, adjustments: {} };
+                        if (!liveInputs.adjustments) liveInputs.adjustments = {};
                     }
                 } catch(e) {
                     console.error("Error cargando autosave", e);
@@ -1235,12 +1246,7 @@
         function checkIfGameOver() {
             let over = false;
             state.players.forEach(p => {
-                let total = p.baseScore;
-                state.rounds.forEach(r => {
-                    if (r.scores[p.id] !== undefined) total += parseInt(r.scores[p.id]) || 0;
-                    if (r.cuts[p.id]) total += 50;
-                    if (r.winner && r.winner.id === p.id) total += r.winner.points;
-                });
+                let total = calculateTotal(p.id, state.currentRoundNum);
                 if (total >= state.config.win) over = true;
             });
             return over;
@@ -1293,6 +1299,10 @@
             }
             
             if (el.value !== val) { el.value = val; }
+        }
+
+        function windowAddPlayerKey(e) {
+            if (e.key === 'Enter') addPlayer();
         }
 
         function handleScoreKeydown(e, playerId) {
@@ -1359,7 +1369,7 @@
             if(await customConfirm("⚠️ ¿Estás seguro de ELIMINAR TODO?\n\nEsto borrará todos los jugadores, las rondas y los puntajes. Empezarás una partida de cero y perderás todo progreso no guardado.", "Eliminar Todo", true)) {
                 state.players = []; state.playerOrder = []; state.rounds = [];
                 state.currentRoundNum = 1; state.viewingRoundNum = 1; state.isGameOver = false;
-                liveInputs = { scores: {}, cuts: {} };
+                liveInputs = { scores: {}, cuts: {}, adjustments: {} };
                 editingRoundSnapshot = null;
                 renderApp(false, 'backward');
                 syncAnnouncedTotals();
@@ -1384,7 +1394,7 @@
         function resetGame() {
             animateGrid('backward', () => {
                 state.rounds = []; state.currentRoundNum = 1; state.viewingRoundNum = 1; state.isGameOver = false;
-                liveInputs = { scores: {}, cuts: {} };
+                liveInputs = { scores: {}, cuts: {}, adjustments: {} };
                 state.players.forEach(p => { p.baseScore = 0; p.joinRound = 1; });
                 editingRoundSnapshot = null;
                 renderApp(false, 'backward');
@@ -1398,7 +1408,6 @@
             const currentHeight = grid.offsetHeight;
             if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             
-            // Vaciar grid y quitar clases de animación atómicamente
             grid.innerHTML = '';
             grid.className = 'grid'; 
             void grid.offsetWidth; 
@@ -1483,18 +1492,27 @@
             showToast("Orden guardado correctamente.", "success");
         }
 
-        function calculateTotal(playerId) {
+        function calculateTotal(playerId, upToRoundNum) {
+            if (upToRoundNum === undefined) upToRoundNum = state.currentRoundNum;
             const p = state.players.find(x => x.id === playerId); if(!p) return 0;
+            
             let total = p.baseScore;
+            
             state.rounds.forEach(r => {
-                if (r.scores[playerId] !== undefined) total += parseInt(r.scores[playerId]) || 0;
-                if (r.cuts[playerId]) total += 50;
-                if (r.winner && r.winner.id === playerId) total += r.winner.points;
+                if (r.id <= upToRoundNum) {
+                    if (r.scores[playerId] !== undefined) total += parseInt(r.scores[playerId]) || 0;
+                    if (r.cuts && r.cuts[playerId]) total += 50;
+                    if (r.winner && r.winner.id === playerId) total += r.winner.points;
+                    if (r.adjustments && r.adjustments[playerId]) total += parseInt(r.adjustments[playerId]) || 0;
+                }
             });
-            if (state.viewingRoundNum === state.currentRoundNum) {
+            
+            if (upToRoundNum === state.currentRoundNum) {
                 if (liveInputs.scores[playerId] !== undefined) total += parseInt(liveInputs.scores[playerId]) || 0;
-                if (liveInputs.cuts[playerId]) total += 50;
+                if (liveInputs.cuts && liveInputs.cuts[playerId]) total += 50;
+                if (liveInputs.adjustments && liveInputs.adjustments[playerId]) total += parseInt(liveInputs.adjustments[playerId]) || 0;
             }
+            
             return total;
         }
 
@@ -1508,7 +1526,7 @@
                 return;
             }
 
-            let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id))) : 0;
+            let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id, state.currentRoundNum))) : 0;
             let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
             state.players.push(newPlayer);
             state.playerOrder.push(newPlayer.id); 
@@ -1559,12 +1577,11 @@
         }
 
         async function promptOverrideTotal(playerId, inputEl) {
-            if (state.viewingRoundNum !== state.currentRoundNum) return;
-            
             const p = state.players.find(x => x.id === playerId);
             if (!p) return;
+            
             const newTotal = parseInt(inputEl.value);
-            const oldTotal = calculateTotal(playerId);
+            const oldTotal = calculateTotal(playerId, state.viewingRoundNum);
 
             if (isNaN(newTotal) || newTotal === oldTotal) {
                 inputEl.value = oldTotal;
@@ -1573,7 +1590,20 @@
 
             const confirmed = await customConfirm(`¿Seguro que deseas cambiar el puntaje total de ${p.name} de ${oldTotal} a ${newTotal}?`, "Modificar Puntaje");
             if (confirmed) {
-                p.baseScore += (newTotal - oldTotal);
+                const diff = newTotal - oldTotal;
+                
+                if (state.viewingRoundNum === state.currentRoundNum) {
+                    liveInputs.adjustments = liveInputs.adjustments || {};
+                    liveInputs.adjustments[playerId] = (liveInputs.adjustments[playerId] || 0) + diff;
+                } else {
+                    const r = state.rounds.find(x => x.id === state.viewingRoundNum);
+                    if (r) {
+                        r.adjustments = r.adjustments || {};
+                        r.adjustments[playerId] = (r.adjustments[playerId] || 0) + diff;
+                        editingRoundSnapshot = JSON.stringify(r); 
+                    }
+                }
+                
                 state.isGameOver = checkIfGameOver();
                 renderApp(true);
                 showToast("Puntaje modificado correctamente.", "success");
@@ -1824,7 +1854,7 @@
 
         function evaluateGameStatus(showAdvanceRoundMessage) {
             let newTotals = {};
-            state.players.forEach(p => newTotals[p.id] = calculateTotal(p.id));
+            state.players.forEach(p => newTotals[p.id] = calculateTotal(p.id, state.currentRoundNum));
 
             let newlyLocked = [];
             let newlyUnlocked = [];
@@ -1870,8 +1900,15 @@
 
             if (pendingWinnerAction.mode === 'commit') {
                 animateGrid('forward', () => {
-                    state.rounds.push({ id: state.currentRoundNum, scores: { ...liveInputs.scores }, cuts: { ...liveInputs.cuts }, winner: { ...tempWinner }, playerOrder: [...state.playerOrder] });
-                    liveInputs = { scores: {}, cuts: {} }; 
+                    state.rounds.push({ 
+                        id: state.currentRoundNum, 
+                        scores: { ...liveInputs.scores }, 
+                        cuts: { ...liveInputs.cuts }, 
+                        adjustments: { ...liveInputs.adjustments },
+                        winner: { ...tempWinner }, 
+                        playerOrder: [...state.playerOrder] 
+                    });
+                    liveInputs = { scores: {}, cuts: {}, adjustments: {} }; 
                     state.currentRoundNum++; 
                     state.viewingRoundNum = state.currentRoundNum;
                     
@@ -2008,7 +2045,7 @@
             let cardsHtml = '';
 
             activePlayers.forEach((p, idx) => {
-                const tot = calculateTotal(p.id);
+                const tot = calculateTotal(p.id, state.viewingRoundNum);
                 let role = '';
                 const isCutter = activePlayers.length > 1 && idx === cutter;
 
@@ -2041,7 +2078,7 @@
                             <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)" onfocus="scrollIntoViewCenter(this, false)">
                             <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')">X</button>
                         </div>
-                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input custom-keyboard-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') { this.blur(); closeNumpad(); }" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', 'total')" onblur="closeNumpadDelay()" ${!isCurrent ? 'readonly' : ''}>
+                        <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input custom-keyboard-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') { this.blur(); closeNumpad(); }" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', 'total')" onblur="closeNumpadDelay()">
                         ${roleHtml}
                         ${cutHtml}
                         <input enterkeyhint="next" tabindex="1" type="text" pattern="[0-9\-]*" inputmode="none" id="score_input_${p.id}" class="standard-input round-score-input custom-keyboard-input" placeholder="Puntos" value="${curScore}" oninput="sanitizeScoreInput(this); handleScoreInput('${p.id}',this.value)" onkeydown="handleScoreKeydown(event, '${p.id}')" onfocus="openNumpad(this, '${p.id}', 'score')" onblur="closeNumpadDelay()" ${inputDisabled}>
@@ -2103,7 +2140,7 @@
                             <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin: 0 auto;">* Para continuar la misma partida aumente el puntaje para ganar</div>
                         </div>`;
                 } else {
-                    let currentInputsCauseGameOver = activePlayers.some(p => calculateTotal(p.id) >= state.config.win);
+                    let currentInputsCauseGameOver = activePlayers.some(p => calculateTotal(p.id, state.currentRoundNum) >= state.config.win);
                     if (currentInputsCauseGameOver) {
                         actionHtml = `
                             <div style="display:flex; flex-direction:column; width:100%; gap:5px; align-items: center;">
@@ -2159,17 +2196,18 @@
                 h += `<tr class="${r.id === state.viewingRoundNum ? 'highlight-row' : ''}"><td onclick="goToRound(${r.id})">R${r.id} ✏️</td>`;
                 tablePlayers.forEach(p => {
                     if (p.joinRound > r.id) { h += `<td>-</td>`; } else {
-                        const pts = r.scores[p.id] ?? 0;
-                        const cutStr = r.cuts[p.id] ? ` <small style="color:var(--warning); font-weight:bold;">(+50)</small>` : '';
+                        const pts = r.scores[p.id] !== undefined ? r.scores[p.id] : 0;
+                        const cutStr = (r.cuts && r.cuts[p.id]) ? ` <small style="color:var(--warning); font-weight:bold;">(+50)</small>` : '';
                         const winStr = (r.winner && r.winner.id === p.id) ? `<div style="color:var(--success); font-size:0.8rem; font-weight:900; margin-top:3px;">🏆 +${r.winner.points}</div>` : '';
-                        h += `<td>${pts}${cutStr}${winStr}</td>`;
+                        const adjStr = (r.adjustments && r.adjustments[p.id]) ? `<div style="color:var(--primary); font-size:0.8rem; font-weight:900; margin-top:3px;">✏️ ${r.adjustments[p.id] > 0 ? '+' : ''}${r.adjustments[p.id]}</div>` : '';
+                        h += `<td>${pts === '-' ? '-' : pts}${cutStr}${winStr}${adjStr}</td>`;
                     }
                 });
                 h += `</tr>`;
             });
             h += `</tbody><tfoot><tr style="background: rgba(0,0,0,0.6); font-weight:900; font-size:1.15rem;"><td style="color:var(--primary); transition: color 0.4s ease;">TOTAL</td>`;
             tablePlayers.forEach(p => {
-                const tot = calculateTotal(p.id);
+                const tot = calculateTotal(p.id, state.currentRoundNum);
                 let col = '#ffffff';
                 if(tot >= state.config.win) col = 'var(--success)'; else if(tot >= state.config.lock) col = 'var(--danger)';
                 h += `<td style="color:${col}; text-shadow: 0 0 3px ${col !== '#ffffff' ? col : 'transparent'};">${tot}</td>`;
@@ -2204,10 +2242,11 @@
             const s = getSaves(); 
             if(s[key]) {
                 if (await customConfirm(`¿Cargar la partida "${key}"?\n\nPerderás el progreso no guardado de la partida actual.`, "Cargar Partida")) {
-                    state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {} }; 
+                    state = s[key].state; liveInputs = s[key].liveInputs || { scores: {}, cuts: {}, adjustments: {} }; 
+                    if(!liveInputs.adjustments) liveInputs.adjustments = {};
                     editingRoundSnapshot = null; closeModal('loadModal'); state.viewingRoundNum = state.currentRoundNum; 
                     
-                    let newTotals = {}; state.players.forEach(p => newTotals[p.id] = calculateTotal(p.id));
+                    let newTotals = {}; state.players.forEach(p => newTotals[p.id] = calculateTotal(p.id, state.currentRoundNum));
                     let winners = state.players.filter(p => newTotals[p.id] >= state.config.win);
                     state.isGameOver = winners.length > 0;
                     state.viewingRoundNum = state.isGameOver ? Math.max(1, state.currentRoundNum - 1) : state.currentRoundNum;
