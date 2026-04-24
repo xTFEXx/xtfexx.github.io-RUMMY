@@ -281,6 +281,7 @@
         
         .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
+        /* Aseguramos que la tarjeta mantenga el blur siempre, sin conflictos de animación */
         .card-panel { position: relative; z-index: 10; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: background-color 0.4s ease, border-color 0.4s ease; }
         .card-panel::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
         
@@ -712,7 +713,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.10.5</div>
+    <div id="watermark">xTFEXx - v0.10.6</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1542,6 +1543,17 @@
 
             input.value = ''; 
             
+            // Lógica para reiniciar si la mesa está completamente vacía (v0.10.6)
+            if (state.players.length === 0 && state.currentRoundNum > 1) {
+                state.rounds = [];
+                state.currentRoundNum = 1;
+                state.viewingRoundNum = 1;
+                state.isGameOver = false;
+                liveInputs = { scores: {}, cuts: {}, adjustments: {} };
+                editingRoundSnapshot = null;
+                showToast("Mesa vacía detectada. Partida reiniciada a la Ronda 1.", "primary");
+            }
+            
             let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id, state.currentRoundNum))) : 0;
             let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
             state.players.push(newPlayer);
@@ -1695,17 +1707,15 @@
         }
 
         function openLoadModal() {
-            const saves = getSaves(); 
-            const list = document.getElementById('savesList'); 
-            let listHtml = '';
+            const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
             
             const keys = Object.keys(saves);
             if (keys.length === 0) {
-                listHtml = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
+                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
             } else {
                 keys.forEach(k => { 
                     const safeKey = k.replace(/"/g, '&quot;');
-                    listHtml += `<div class="save-item">
+                    list.innerHTML += `<div class="save-item">
                         <span class="save-item-title">${k}</span>
                         <div class="save-item-actions">
                             <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
@@ -1716,7 +1726,6 @@
                     </div>`; 
                 });
             }
-            list.innerHTML = listHtml;
             
             if (!document.getElementById('loadModal').classList.contains('active')) {
                 openModal('loadModal');
@@ -1776,22 +1785,22 @@
                 return idxA - idxB;
             });
 
-            let pContainerHtml = '';
+            const pContainer = document.getElementById('winnerPlayerSelect');
+            pContainer.innerHTML = '';
             activePlayers.forEach((p, idx) => {
                 const isSelected = tempWinner.id === p.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                pContainerHtml += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
+                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
             });
-            document.getElementById('winnerPlayerSelect').innerHTML = pContainerHtml;
 
-            let tContainerHtml = '';
+            const tContainer = document.getElementById('winnerTypeSelect');
+            tContainer.innerHTML = '';
             const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                tContainerHtml += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
             });
-            document.getElementById('winnerTypeSelect').innerHTML = tContainerHtml;
         }
 
         function animateValue(element, start, end, duration) {
