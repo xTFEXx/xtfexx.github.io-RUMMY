@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Rummy Pro</title>
     
     <link rel="manifest" href="manifest.json">
@@ -16,6 +18,7 @@
             /* Tema Océano (Predeterminado) */
             --theme-color: #0f172a;
             --bg-base: var(--theme-color);
+            --bg-size: cover;
             --surface: #1e293b;
             --surface-hover: #334155;
             --primary: #38bdf8;
@@ -34,46 +37,62 @@
             --kb-height: 0px; 
             --glass-blur: 0px; 
             --modal-bg: rgba(0,0,0,0.85);
+
+            /* Teclado por defecto (Océano) */
+            --numpad-bg: #0f172a;
+            --numpad-blur: 0px;
+            --numpad-btn-bg: #1e293b;
+            --numpad-border: #38bdf8;
+            --numpad-glass-display: none;
         }
 
         /* --- FILA 1: COLORES SÓLIDOS CLÁSICOS --- */
-        body[data-theme="emerald"] {
+        html[data-theme="emerald"] {
             --theme-color: #022c22; --bg-base: var(--theme-color); --surface: #064e3b; --surface-hover: #065f46;
             --primary: #34d399; --primary-glow: rgba(52, 211, 153, 0.4);
+            --numpad-bg: #022c22; --numpad-blur: 0px; --numpad-btn-bg: #064e3b; --numpad-border: #34d399; --numpad-glass-display: none;
         }
-        body[data-theme="crimson"] {
+        html[data-theme="crimson"] {
             --theme-color: #2a0a0a; --bg-base: var(--theme-color); --surface: #450a0a; --surface-hover: #7f1d1d;
             --primary: #f87171; --primary-glow: rgba(248, 113, 113, 0.4);
+            --numpad-bg: #2a0a0a; --numpad-blur: 0px; --numpad-btn-bg: #450a0a; --numpad-border: #f87171; --numpad-glass-display: none;
         }
-        body[data-theme="purple"] {
+        html[data-theme="purple"] {
             --theme-color: #2e1065; --bg-base: var(--theme-color); --surface: #3b0764; --surface-hover: #581c87;
             --primary: #c084fc; --primary-glow: rgba(192, 132, 252, 0.4);
+            --numpad-bg: #2e1065; --numpad-blur: 0px; --numpad-btn-bg: #3b0764; --numpad-border: #c084fc; --numpad-glass-display: none;
         }
-        body[data-theme="sunset"] {
+        html[data-theme="sunset"] {
             --theme-color: #451a03; --bg-base: var(--theme-color); --surface: #78350f; --surface-hover: #92400e;
             --primary: #fbbf24; --primary-glow: rgba(251, 191, 36, 0.4);
+            --numpad-bg: #451a03; --numpad-blur: 0px; --numpad-btn-bg: #78350f; --numpad-border: #fbbf24; --numpad-glass-display: none;
         }
 
         /* --- FILA 2: DEGRADADOS DE PROFUNDIDAD --- */
-        body[data-theme="graphite"] {
+        html[data-theme="graphite"] {
             --theme-color: #111111; --bg-base: linear-gradient(135deg, #111111 0%, #374151 100%); --surface: #222222; --surface-hover: #333333;
             --primary: #f3f4f6; --primary-glow: rgba(243, 244, 246, 0.4);
+            --numpad-bg: #111111; --numpad-blur: 0px; --numpad-btn-bg: #222222; --numpad-border: #f3f4f6; --numpad-glass-display: none;
         }
-        body[data-theme="volcano"] {
+        html[data-theme="volcano"] {
             --theme-color: #271003; --bg-base: linear-gradient(135deg, #271003 0%, #7f1d1d 100%); --surface: #521c04; --surface-hover: #7c2d12;
             --primary: #fb923c; --primary-glow: rgba(251, 146, 60, 0.4);
+            --numpad-bg: #271003; --numpad-blur: 0px; --numpad-btn-bg: #521c04; --numpad-border: #fb923c; --numpad-glass-display: none;
         }
-        body[data-theme="abyss"] {
+        html[data-theme="abyss"] {
             --theme-color: #020617; --bg-base: linear-gradient(135deg, #020617 0%, #1e3a8a 100%); --surface: #0f172a; --surface-hover: #1e293b;
             --primary: #818cf8; --primary-glow: rgba(129, 140, 248, 0.4);
+            --numpad-bg: #020617; --numpad-blur: 0px; --numpad-btn-bg: #0f172a; --numpad-border: #818cf8; --numpad-glass-display: none;
         }
-        body[data-theme="forest"] {
+        html[data-theme="forest"] {
             --theme-color: #0f1c10; --bg-base: linear-gradient(135deg, #0f1c10 0%, #064e3b 100%); --surface: #1d361f; --surface-hover: #2d5230;
             --primary: #bef264; --primary-glow: rgba(190, 242, 100, 0.4);
+            --numpad-bg: #0f1c10; --numpad-blur: 0px; --numpad-btn-bg: #1d361f; --numpad-border: #bef264; --numpad-glass-display: none;
         }
-        body[data-theme="cyberpunk"] {
+        html[data-theme="cyberpunk"] {
             --theme-color: #1c0522; --bg-base: linear-gradient(135deg, #1c0522 0%, #831843 100%); --surface: #3b074a; --surface-hover: #5d0f75;
             --primary: #f472b6; --primary-glow: rgba(244, 114, 182, 0.4);
+            --numpad-bg: #1c0522; --numpad-blur: 0px; --numpad-btn-bg: #3b074a; --numpad-border: #f472b6; --numpad-glass-display: none;
         }
 
         /* --- ANIMACIONES PARA FONDOS --- */
@@ -102,7 +121,7 @@
         .bubble-7 { left: 75%; width: 22px; height: 22px; animation: floatUpBubble 13s infinite linear; animation-delay: 11s; }
 
         /* --- FILA 3: FONDOS COMPLEJOS Y EFECTO CRISTAL --- */
-        body[data-theme="neon"] {
+        html[data-theme="neon"] {
             --theme-color: #3b0764;
             --bg-base: 
                 linear-gradient(rgba(244, 114, 182, 0.15) 1px, transparent 1px),
@@ -110,79 +129,126 @@
                 radial-gradient(circle at 10% 20%, rgba(244, 114, 182, 0.4) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(147, 51, 234, 0.5) 0%, transparent 50%),
                 linear-gradient(135deg, #1e0b36 0%, #3b0764 100%);
-            background-size: 30px 30px, 30px 30px, 100% 100%, 100% 100%, 100% 100%;
-            background-attachment: fixed;
+            --bg-size: 30px 30px, 30px 30px, 100% 100%, 100% 100%, 100% 100%;
             --surface: rgba(46, 16, 101, 0.3); 
             --surface-hover: rgba(76, 29, 149, 0.5);
             --primary: #f472b6; --primary-glow: rgba(244, 114, 182, 0.6);
             --glass-blur: 15px;
             --modal-bg: rgba(28, 5, 34, 0.95);
+            /* Teclado Sólido */
+            --numpad-bg: #1e0b36;
+            --numpad-blur: 0px;
+            --numpad-btn-bg: #3b0764;
+            --numpad-border: #f472b6;
+            --numpad-glass-display: none;
         }
 
-        body[data-theme="aurora"] {
+        html[data-theme="aurora"] {
             --theme-color: #064e3b;
             --bg-base: 
                 radial-gradient(ellipse at 50% -20%, rgba(52, 211, 153, 0.6) 0%, transparent 60%),
                 radial-gradient(ellipse at 110% 60%, rgba(30, 58, 138, 0.7) 0%, transparent 60%),
                 linear-gradient(135deg, #022c22 0%, #042f2e 100%);
-            background-attachment: fixed;
             --surface: rgba(2, 44, 34, 0.35); 
             --surface-hover: rgba(6, 78, 59, 0.55);
             --primary: #34d399; --primary-glow: rgba(52, 211, 153, 0.6);
             --glass-blur: 15px;
             --modal-bg: rgba(2, 44, 34, 0.95); 
+            /* Teclado Sólido */
+            --numpad-bg: #022c22;
+            --numpad-blur: 0px;
+            --numpad-btn-bg: #064e3b;
+            --numpad-border: #34d399;
+            --numpad-glass-display: none;
         }
-        body[data-theme="aurora"] #bg-aurora { display: block; }
+        html[data-theme="aurora"] body #bg-aurora { display: block; }
 
-        body[data-theme="eclipse"] {
+        html[data-theme="eclipse"] {
             --theme-color: #450a0a;
             --bg-base: 
                 radial-gradient(circle at 50% 50%, #000000 6%, #fde047 7%, #ea580c 11%, rgba(225, 29, 72, 0.8) 22%, transparent 60%),
                 linear-gradient(135deg, #2a0a0a 0%, #4c1d95 100%);
-            background-attachment: fixed;
             --surface: rgba(42, 10, 10, 0.35); 
             --surface-hover: rgba(69, 10, 10, 0.55);
             --primary: #fb7185; --primary-glow: rgba(251, 113, 133, 0.6);
             --glass-blur: 15px;
             --modal-bg: rgba(42, 10, 10, 0.95);
+            /* Teclado Sólido */
+            --numpad-bg: #2a0a0a;
+            --numpad-blur: 0px;
+            --numpad-btn-bg: #450a0a;
+            --numpad-border: #fb7185;
+            --numpad-glass-display: none;
         }
 
-        body[data-theme="deepsea"] {
+        html[data-theme="deepsea"] {
             --theme-color: #082f49;
             --bg-base: 
                 radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.25) 0%, transparent 50%),
                 radial-gradient(circle at 20% 40%, rgba(14, 116, 144, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 80% 60%, rgba(17, 94, 89, 0.2) 0%, transparent 50%),
                 linear-gradient(180deg, #082f49 0%, #020617 85%, #000000 100%); 
-            background-attachment: fixed;
             --surface: rgba(15, 23, 42, 0.4); 
             --surface-hover: rgba(8, 47, 73, 0.6);
             --primary: #2dd4bf; --primary-glow: rgba(45, 212, 191, 0.6);
             --glass-blur: 15px;
             --modal-bg: rgba(2, 6, 23, 0.95); 
+            /* Teclado Sólido */
+            --numpad-bg: #020617;
+            --numpad-blur: 0px;
+            --numpad-btn-bg: #082f49;
+            --numpad-border: #2dd4bf;
+            --numpad-glass-display: none;
         }
-        body[data-theme="deepsea"] #bg-deepsea { display: block; }
+        html[data-theme="deepsea"] body #bg-deepsea { display: block; }
 
-        body[data-theme="cosmic"] {
+        html[data-theme="cosmic"] {
             --theme-color: #0a0a0a;
             --bg-base: 
                 linear-gradient(45deg, transparent 40%, rgba(168, 85, 247, 0.15) 45%, rgba(168, 85, 247, 0.25) 50%, rgba(168, 85, 247, 0.15) 55%, transparent 60%),
                 radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.35) 0%, transparent 50%),
                 radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.25) 0%, transparent 60%),
                 linear-gradient(135deg, #000000 0%, #17002e 100%);
-            background-attachment: fixed;
             --surface: rgba(10, 10, 10, 0.4); 
             --surface-hover: rgba(23, 23, 23, 0.6);
             --primary: #a855f7; --primary-glow: rgba(168, 85, 247, 0.6);
             --glass-blur: 15px;
             --modal-bg: rgba(10, 10, 10, 0.95); 
+            /* Teclado Sólido */
+            --numpad-bg: #000000;
+            --numpad-blur: 0px;
+            --numpad-btn-bg: #17002e;
+            --numpad-border: #a855f7;
+            --numpad-glass-display: none;
         }
-        body[data-theme="cosmic"] #bg-cosmic { display: block; }
+        html[data-theme="cosmic"] body #bg-cosmic { display: block; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-        html, body { 
-            overscroll-behavior-y: none; overscroll-behavior-x: none; overscroll-behavior: none; 
+        /* Estructura para permitir bouncing nativo seguro sin cortes de color */
+        html {
+            background-color: var(--theme-color); 
+            transition: background-color 0.4s ease;
+            height: 100%;
+        }
+
+        /* --- SOLUCIÓN DE SALTO DE FONDO EN SCROLL --- */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-base);
+            background-size: var(--bg-size);
+            z-index: -2;
+            transition: background 0.4s ease;
+        }
+
+        body { 
+            background: transparent; color: var(--text-main); 
+            min-height: 100vh; padding: max(15px, env(safe-area-inset-top)) 15px 15px 15px; 
+            padding-bottom: calc(40px + var(--kb-height) + env(safe-area-inset-bottom)); 
+            overflow-x: hidden; position: relative; 
+            transition: padding-bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); 
             -webkit-user-select: none; -ms-user-select: none; user-select: none; 
             -webkit-touch-callout: none; 
         }
@@ -199,14 +265,6 @@
             .round-nav::-webkit-scrollbar-thumb:hover, .table-container::-webkit-scrollbar-thumb:hover, .scrollable-list::-webkit-scrollbar-thumb:hover { background: var(--primary); }
         }
 
-        body { 
-            background: var(--bg-base); color: var(--text-main); 
-            min-height: 100vh; padding: 15px; 
-            padding-bottom: calc(40px + var(--kb-height)); 
-            overflow-x: hidden; position: relative; 
-            transition: padding-bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); 
-        }
-
         /* --- ENCABEZADO OPTIMIZADO PARA MÓVILES --- */
         .header-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 8px; width: 100%; position: relative; z-index: 10; }
         .header-logo { height: clamp(2.5rem, 10vw, 4.4rem); width: clamp(2.5rem, 10vw, 4.4rem); border-radius: 8px; object-fit: contain; flex-shrink: 0; }
@@ -216,6 +274,7 @@
         
         .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
+        /* Aseguramos que la tarjeta mantenga el blur siempre, sin conflictos de animación */
         .card-panel { position: relative; z-index: 10; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: background-color 0.4s ease, border-color 0.4s ease; }
         .card-panel::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
         
@@ -361,7 +420,7 @@
         /* --- ESTILOS TECLADO PERSONALIZADO --- */
         .numpad-container {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: var(--numpad-bg);
             border-top: 1px solid var(--border);
             height: 33.33vh; min-height: 220px; max-height: 50vh;
             padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
@@ -370,6 +429,7 @@
             transform: translateY(100%);
             transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.4s ease, border-color 0.4s ease;
             touch-action: none; user-select: none; -webkit-user-select: none;
+            backdrop-filter: blur(var(--numpad-blur)); -webkit-backdrop-filter: blur(var(--numpad-blur));
         }
         .numpad-container.active { transform: translateY(0); }
         .numpad-grid {
@@ -378,15 +438,15 @@
         }
         .numpad-btn {
             position: relative;
-            background: var(--surface); color: white;
+            background: var(--numpad-btn-bg); color: white;
             font-size: 1.6rem; font-weight: bold;
-            border: 1px solid var(--border); border-radius: 8px;
+            border: 1px solid var(--numpad-border); border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
             height: 100%; width: 100%; padding: 0;
             transition: background 0.1s, transform 0.1s, border-color 0.4s ease;
             touch-action: none; user-select: none; -webkit-user-select: none;
         }
-        .numpad-btn::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
+        .numpad-btn::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; display: var(--numpad-glass-display); }
         .numpad-btn.pressed { background: var(--primary); color: var(--theme-color); transform: scale(0.95); }
         .numpad-action { background: var(--surface-hover); color: var(--warning); font-size: 1.4rem; transition: opacity 0.2s ease; }
         .numpad-enter { background: var(--success); color: white; border: none; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; grid-column: span 3; }
@@ -448,7 +508,7 @@
                 👥 Nuevo Jugador
             </div>
             <div class="flex-row">
-                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeydown="if(event.key === 'Enter') addPlayer()" onfocus="scrollIntoViewCenter(this, false)">
+                <input type="text" id="newPlayerInput" class="standard-input" placeholder="Nombre..." style="flex: 2;" onkeypress="if(event.key === 'Enter') addPlayer()" onfocus="scrollIntoViewCenter(this, false)">
                 <button onclick="addPlayer()" class="outline-primary action-small" style="flex: 1; height: 48px;">+ Añadir</button>
                 <button onclick="openOrderModal()" id="btnOrderPlayers" class="outline-primary action-small" style="flex: 1; height: 48px;">↕️ Reordenar</button>
             </div>
@@ -646,7 +706,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.9.9</div>
+    <div id="watermark">xTFEXx - v0.10.2</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -658,8 +718,10 @@
         function setTheme(themeName) {
             if (themeName !== 'default') {
                 document.body.setAttribute('data-theme', themeName);
+                document.documentElement.setAttribute('data-theme', themeName);
             } else {
                 document.body.removeAttribute('data-theme');
+                document.documentElement.removeAttribute('data-theme');
             }
             localStorage.setItem('rummyProTheme', themeName);
             
@@ -1331,20 +1393,16 @@
             const currentHeight = grid.offsetHeight;
             if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             
-            // Vaciamos primero y eliminamos clases conflictivas de forma atómica para conservar el Blur
+            // Vaciar grid y quitar clases de animación atómicamente
             grid.innerHTML = '';
             grid.className = 'grid'; 
             void grid.offsetWidth; 
             
             if (direction) grid.classList.add(`slide-${direction}`);
             
-            setTimeout(() => { 
-                grid.style.minHeight = ''; 
-            }, 50); 
+            setTimeout(() => { grid.style.minHeight = ''; }, 50); 
             
-            setTimeout(() => {
-                grid.classList.remove(`slide-${direction}`);
-            }, 850); // Mismo tiempo que dura la animación CSS
+            setTimeout(() => { grid.classList.remove(`slide-${direction}`); }, 850); 
             
             callback();
         }
@@ -1399,22 +1457,15 @@
 
         function openOrderModal() {
             if (state.players.length < 2) return showToast("Se necesitan al menos 2 jugadores para ordenarlos.", "warning");
-            
-            let listHtml = '';
+            const list = document.getElementById('orderList'); list.innerHTML = '';
             let currentOrder = state.playerOrder || state.players.map(p => p.id);
             let activePlayers = currentOrder.map(id => state.players.find(p => p.id === id)).filter(p => p && p.joinRound <= state.currentRoundNum);
-            
             activePlayers.forEach((p, idx) => {
-                listHtml += `<div class="drag-item" data-id="${p.id}">
-                    <span class="drag-handle" title="Agarra y arrastra">☰</span>
-                    <span class="order-num">${idx + 1}.</span>
-                    <span class="text-truncate" style="flex:1; font-weight:bold; font-size:1.2rem; text-align:center; padding-right:35px;">${p.name}</span>
-                </div>`;
+                let div = document.createElement('div'); div.className = 'drag-item'; div.dataset.id = p.id;
+                div.innerHTML = `<span class="drag-handle" title="Agarra y arrastra">☰</span><span class="order-num">${idx + 1}.</span><span class="text-truncate" style="flex:1; font-weight:bold; font-size:1.2rem; text-align:center; padding-right:35px;">${p.name}</span>`;
+                list.appendChild(div);
             });
-            document.getElementById('orderList').innerHTML = listHtml;
-            
-            enableCustomDrag(); 
-            openModal('orderModal');
+            enableCustomDrag(); openModal('orderModal');
         }
 
         function confirmOrder() {
@@ -1452,12 +1503,11 @@
                 return;
             }
 
-            input.value = ''; // Limpiamos inmediatamente para evitar doble ejecución si se mantiene presionado el enter
-            
             let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id))) : 0;
             let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
             state.players.push(newPlayer);
             state.playerOrder.push(newPlayer.id); 
+            input.value = '';
             
             if(state.viewingRoundNum !== state.currentRoundNum) {
                 undoRoundChanges(true); 
@@ -1595,17 +1645,15 @@
         }
 
         function openLoadModal() {
-            const saves = getSaves(); 
-            const list = document.getElementById('savesList'); 
-            let listHtml = '';
+            const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
             
             const keys = Object.keys(saves);
             if (keys.length === 0) {
-                listHtml = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
+                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
             } else {
                 keys.forEach(k => { 
                     const safeKey = k.replace(/"/g, '&quot;');
-                    listHtml += `<div class="save-item">
+                    list.innerHTML += `<div class="save-item">
                         <span class="save-item-title">${k}</span>
                         <div class="save-item-actions">
                             <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
@@ -1616,7 +1664,6 @@
                     </div>`; 
                 });
             }
-            list.innerHTML = listHtml;
             
             if (!document.getElementById('loadModal').classList.contains('active')) {
                 openModal('loadModal');
@@ -1676,22 +1723,22 @@
                 return idxA - idxB;
             });
 
-            let pContainerHtml = '';
+            const pContainer = document.getElementById('winnerPlayerSelect');
+            pContainer.innerHTML = '';
             activePlayers.forEach((p, idx) => {
                 const isSelected = tempWinner.id === p.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                pContainerHtml += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
+                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
             });
-            document.getElementById('winnerPlayerSelect').innerHTML = pContainerHtml;
 
-            let tContainerHtml = '';
+            const tContainer = document.getElementById('winnerTypeSelect');
+            tContainer.innerHTML = '';
             const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                tContainerHtml += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
             });
-            document.getElementById('winnerTypeSelect').innerHTML = tContainerHtml;
         }
 
         function animateValue(element, start, end, duration) {
@@ -1920,15 +1967,9 @@
             const bannerCont = document.getElementById('pastRoundBannerContainer');
             
             if(!keepFocus) {
-                closeNumpadUI(); // CRITICAL: Release any active inputs that are about to be destroyed
+                closeNumpadUI(); 
                 const currentHeight = grid.offsetHeight;
                 if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
-
-                grid.innerHTML = ''; 
-                grid.className = 'grid'; 
-                void grid.offsetWidth; 
-                if (direction) grid.classList.add(`slide-${direction}`);
-                setTimeout(() => { grid.style.minHeight = ''; }, 50);
             }
 
             const isCurrent = state.viewingRoundNum === state.currentRoundNum;
