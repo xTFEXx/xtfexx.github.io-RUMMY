@@ -13,6 +13,13 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-512.png">
 
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('rummyProTheme') || 'default';
+            if (savedTheme !== 'default') document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <style>
         :root {
             /* Tema Océano (Predeterminado) */
@@ -255,11 +262,35 @@
         *::-webkit-scrollbar { display: none; } 
         
         @media (pointer: fine) {
-            .round-nav, .table-container, .scrollable-list { scrollbar-width: thin; scrollbar-color: rgba(56, 189, 248, 0.4) transparent; }
-            .round-nav::-webkit-scrollbar, .table-container::-webkit-scrollbar, .scrollable-list::-webkit-scrollbar { display: block; height: 6px; width: 6px; }
-            .round-nav::-webkit-scrollbar-thumb, .table-container::-webkit-scrollbar-thumb, .scrollable-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.4); border-radius: 10px; }
-            .round-nav::-webkit-scrollbar-thumb:hover, .table-container::-webkit-scrollbar-thumb:hover, .scrollable-list::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+            .round-nav, .table-scroll, .scrollable-list { scrollbar-width: thin; scrollbar-color: rgba(56, 189, 248, 0.4) transparent; }
+            .round-nav::-webkit-scrollbar, .table-scroll::-webkit-scrollbar, .scrollable-list::-webkit-scrollbar { display: block; height: 6px; width: 6px; }
+            .round-nav::-webkit-scrollbar-thumb, .table-scroll::-webkit-scrollbar-thumb, .scrollable-list::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.4); border-radius: 10px; }
+            .round-nav::-webkit-scrollbar-thumb:hover, .table-scroll::-webkit-scrollbar-thumb:hover, .scrollable-list::-webkit-scrollbar-thumb:hover { background: var(--primary); }
         }
+
+        /* --- PANTALLA DE CARGA (SPLASH SCREEN) --- */
+        #splashScreen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-base); z-index: 9999999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #splashScreen img {
+            width: 80px; border-radius: 16px;
+            animation: pulseSplash 1.5s infinite alternate;
+        }
+        @keyframes pulseSplash {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+            100% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(56, 189, 248, 0); }
+        }
+        .splash-loader {
+            margin-top: 20px; width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* --- SOLUCIÓN DE SALTO DE FONDO EN SCROLL --- */
         body::before {
@@ -281,7 +312,6 @@
         
         .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* Aseguramos que la tarjeta mantenga el blur siempre, sin conflictos de animación */
         .card-panel { position: relative; z-index: 10; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: background-color 0.4s ease, border-color 0.4s ease; }
         .card-panel::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
         
@@ -324,7 +354,7 @@
         #viewTitleContainer { position: relative; z-index: 10; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
         #viewTitle { text-align: center; font-size: 1.4rem; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
-        .grid { position: relative; z-index: 10; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .grid { position: relative; z-index: 10; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: start;}
         @media (min-width: 800px) { .grid { grid-template-columns: repeat(5, 1fr); gap: 15px; } }
 
         @keyframes slideInForward { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
@@ -360,8 +390,11 @@
         .float-anim { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: var(--gold); font-weight: 900; font-size: 3rem; text-shadow: 0 0 20px #000; pointer-events: none; z-index: 10; animation: floatUp 0.8s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1.2); } }
 
-        .table-container { position: relative; z-index: 10; width: 100%; overflow-x: auto; margin-top: 15px; margin-bottom: 25px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.4s ease, border-color 0.4s ease; }
+        /* Estructura para separar el contenedor visual del área de scroll horizontal y no romper el efecto cristal */
+        .table-container { position: relative; z-index: 10; width: 100%; margin-top: 15px; margin-bottom: 25px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.4s ease, border-color 0.4s ease; }
         .table-container::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); z-index: -1; border-radius: inherit; }
+        .table-scroll { width: 100%; overflow-x: auto; border-radius: inherit; }
+        
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.95rem; }
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
         th { background: rgba(0,0,0,0.6); color: var(--text-main); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
@@ -461,6 +494,12 @@
 </head>
 <body>
 
+    <div id="splashScreen">
+        <img src="icon-512.png" alt="Cargando" onerror="this.style.display='none'">
+        <h2 style="color: var(--primary); margin-top: 15px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px var(--primary-glow);">Rummy Pro</h2>
+        <div class="splash-loader"></div>
+    </div>
+
     <div id="bg-aurora" class="bg-particles">
         <div class="stars-1"></div><div class="stars-2"></div><div class="stars-3"></div>
     </div>
@@ -529,7 +568,9 @@
     <div id="gameBoard">
         <h3 style="margin-top: 10px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
         <div class="table-container" id="historyTableContainer">
-            <table id="historyTable"></table>
+            <div class="table-scroll">
+                <table id="historyTable"></table>
+            </div>
         </div>
 
         <div class="round-nav" id="roundNav"></div>
@@ -713,7 +754,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.10.6</div>
+    <div id="watermark">xTFEXx - v0.10.8</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1214,6 +1255,7 @@
 
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
+        // Se inicializa con property adjustments
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [], isGameOver: false };
         let liveInputs = { scores: {}, cuts: {}, adjustments: {} };
         let pendingWinnerAction = { mode: '', roundId: null };
@@ -1239,6 +1281,16 @@
 
             renderApp(); 
             syncAnnouncedTotals(); 
+            
+            // Ocultar pantalla de carga con suavidad
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if(splash) {
+                    splash.style.opacity = '0';
+                    splash.style.visibility = 'hidden';
+                    setTimeout(() => splash.style.display = 'none', 500);
+                }
+            }, 400);
         };
 
         function syncAnnouncedTotals() {
@@ -1372,7 +1424,7 @@
         let lastTouchY = 0;
         document.addEventListener('touchstart', function(e) { lastTouchY = e.touches[0].clientY; }, { passive: true });
         document.addEventListener('touchmove', function(e) {
-            if (e.target.closest('.modal-content') || e.target.closest('.table-container') || e.target.closest('.round-nav') || e.target.closest('.numpad-container')) return;
+            if (e.target.closest('.modal-content') || e.target.closest('.table-scroll') || e.target.closest('.round-nav') || e.target.closest('.numpad-container')) return;
             const currentTouchY = e.touches[0].clientY;
             if (currentTouchY > lastTouchY && window.scrollY <= 0) { e.preventDefault(); }
         }, { passive: false });
@@ -1420,16 +1472,12 @@
         function animateGrid(direction, callback) {
             const grid = document.getElementById('playersGrid');
             if (state.players.length === 0) { callback(); return; }
-            const currentHeight = grid.offsetHeight;
-            if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             
             grid.innerHTML = '';
             grid.className = 'grid'; 
             void grid.offsetWidth; 
             
             if (direction) grid.classList.add(`slide-${direction}`);
-            
-            setTimeout(() => { grid.style.minHeight = ''; }, 50); 
             
             setTimeout(() => { grid.classList.remove(`slide-${direction}`); }, 850); 
             
@@ -1572,6 +1620,12 @@
         async function removePlayer(playerId) {
             const pName = state.players.find(p => p.id === playerId)?.name || 'este jugador';
             if(await customConfirm(`¿Seguro que deseas eliminar a ${pName}?`, 'Eliminar Jugador', true)) {
+                
+                // Si el teclado estaba abierto en ese jugador, lo cerramos para evitar errores
+                if (numpadPlayerId === playerId && document.getElementById('customNumpad').classList.contains('active')) {
+                    closeNumpad();
+                }
+
                 state.players = state.players.filter(p => p.id !== playerId);
                 state.playerOrder = state.playerOrder.filter(id => id !== playerId);
                 renderApp(false, ''); 
@@ -1707,15 +1761,17 @@
         }
 
         function openLoadModal() {
-            const saves = getSaves(); const list = document.getElementById('savesList'); list.innerHTML = '';
+            const saves = getSaves(); 
+            const list = document.getElementById('savesList'); 
+            let listHtml = '';
             
             const keys = Object.keys(saves);
             if (keys.length === 0) {
-                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
+                listHtml = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">No hay partidas guardadas.</p>';
             } else {
                 keys.forEach(k => { 
                     const safeKey = k.replace(/"/g, '&quot;');
-                    list.innerHTML += `<div class="save-item">
+                    listHtml += `<div class="save-item">
                         <span class="save-item-title">${k}</span>
                         <div class="save-item-actions">
                             <button class="primary action-small" style="flex:2;" data-key="${safeKey}" onclick="loadGame(this.getAttribute('data-key'))">Cargar</button>
@@ -1726,6 +1782,7 @@
                     </div>`; 
                 });
             }
+            list.innerHTML = listHtml;
             
             if (!document.getElementById('loadModal').classList.contains('active')) {
                 openModal('loadModal');
@@ -1785,22 +1842,22 @@
                 return idxA - idxB;
             });
 
-            const pContainer = document.getElementById('winnerPlayerSelect');
-            pContainer.innerHTML = '';
+            let pContainerHtml = '';
             activePlayers.forEach((p, idx) => {
                 const isSelected = tempWinner.id === p.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
+                pContainerHtml += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
             });
+            document.getElementById('winnerPlayerSelect').innerHTML = pContainerHtml;
 
-            const tContainer = document.getElementById('winnerTypeSelect');
-            tContainer.innerHTML = '';
+            let tContainerHtml = '';
             const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
                 const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+                tContainerHtml += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
             });
+            document.getElementById('winnerTypeSelect').innerHTML = tContainerHtml;
         }
 
         function animateValue(element, start, end, duration) {
@@ -2037,8 +2094,6 @@
             
             if(!keepFocus) {
                 closeNumpadUI(); 
-                const currentHeight = grid.offsetHeight;
-                if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             }
 
             const isCurrent = state.viewingRoundNum === state.currentRoundNum;
