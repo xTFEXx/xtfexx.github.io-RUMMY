@@ -354,6 +354,7 @@
         #viewTitleContainer { position: relative; z-index: 10; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
         #viewTitle { text-align: center; font-size: 1.4rem; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
+        /* Cuadrícula adaptable dinámicamente sin altura forzada */
         .grid { position: relative; z-index: 10; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: start;}
         @media (min-width: 800px) { .grid { grid-template-columns: repeat(5, 1fr); gap: 15px; } }
 
@@ -754,7 +755,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.10.8</div>
+    <div id="watermark">xTFEXx - v0.10.9</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1842,22 +1843,22 @@
                 return idxA - idxB;
             });
 
-            let pContainerHtml = '';
+            const pContainer = document.getElementById('winnerPlayerSelect');
+            pContainer.innerHTML = '';
             activePlayers.forEach((p, idx) => {
                 const isSelected = tempWinner.id === p.id;
-                const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                pContainerHtml += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
+                const activeStyle = isSelected ? 'background: var(--primary); color: var(--theme-color); border-color: var(--primary);' : '';
+                pContainer.innerHTML += `<button class="outline-primary" style="flex: 1; min-width: 100px; padding: 15px; ${activeStyle}" onclick="tempWinner.id='${p.id}'; renderWinnerModalUI()">#${idx+1} ${p.name}</button>`;
             });
-            document.getElementById('winnerPlayerSelect').innerHTML = pContainerHtml;
 
-            let tContainerHtml = '';
+            const tContainer = document.getElementById('winnerTypeSelect');
+            tContainer.innerHTML = '';
             const types = [ { id: 'normal', name: 'Normal', pts: 50 }, { id: 'doblete', name: 'Doblete', pts: 100 }, { id: 'tripilla', name: 'Tripilla', pts: 200 } ];
             types.forEach(t => {
                 const isSelected = tempWinner.type === t.id;
-                const activeStyle = isSelected ? 'background: var(--primary); color: var(--bg-base); border-color: var(--primary);' : '';
-                tContainerHtml += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
+                const activeStyle = isSelected ? 'background: var(--primary); color: var(--theme-color); border-color: var(--primary);' : '';
+                tContainer.innerHTML += `<button class="outline-primary" style="width: 100%; padding: 15px; margin-bottom: 5px; ${activeStyle}" onclick="tempWinner.type='${t.id}'; tempWinner.points=${t.pts}; renderWinnerModalUI()">${t.name} (+${t.pts})</button>`;
             });
-            document.getElementById('winnerTypeSelect').innerHTML = tContainerHtml;
         }
 
         function animateValue(element, start, end, duration) {
