@@ -755,7 +755,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.11.0</div>
+    <div id="watermark">xTFEXx - v0.10.9</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1473,16 +1473,12 @@
         function animateGrid(direction, callback) {
             const grid = document.getElementById('playersGrid');
             if (state.players.length === 0) { callback(); return; }
-            const currentHeight = grid.offsetHeight;
-            if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             
             grid.innerHTML = '';
             grid.className = 'grid'; 
             void grid.offsetWidth; 
             
             if (direction) grid.classList.add(`slide-${direction}`);
-            
-            setTimeout(() => { grid.style.minHeight = ''; }, 50); 
             
             setTimeout(() => { grid.classList.remove(`slide-${direction}`); }, 850); 
             
