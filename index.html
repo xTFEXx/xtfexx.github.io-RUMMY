@@ -239,10 +239,15 @@
             height: 100%;
         }
 
-        /* Ocultar scroll pull-to-refresh SÓLO si la app está instalada (PWA) */
+        /* --- MAGIA PULL-TO-REFRESH --- */
+        html, body {
+            overscroll-behavior-x: none; /* Permite pull-to-refresh (overscroll-y) en navegador normal */
+        }
+        
+        /* Ocultar scroll pull-to-refresh SÓLO si la app está instalada (PWA) mediante CSS */
         @media (display-mode: standalone) {
             html, body {
-                overscroll-behavior: none;
+                overscroll-behavior-y: none;
             }
         }
 
@@ -755,7 +760,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.10.9</div>
+    <div id="watermark">xTFEXx - v0.11.0</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1422,9 +1427,11 @@
 
         window.addEventListener('beforeunload', function (e) { if (state.players.length > 0) { e.preventDefault(); e.returnValue = ''; return ''; } });
 
+        const isRunningAsPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         let lastTouchY = 0;
         document.addEventListener('touchstart', function(e) { lastTouchY = e.touches[0].clientY; }, { passive: true });
         document.addEventListener('touchmove', function(e) {
+            if (!isRunningAsPWA) return; 
             if (e.target.closest('.modal-content') || e.target.closest('.table-scroll') || e.target.closest('.round-nav') || e.target.closest('.numpad-container')) return;
             const currentTouchY = e.touches[0].clientY;
             if (currentTouchY > lastTouchY && window.scrollY <= 0) { e.preventDefault(); }
@@ -1592,7 +1599,6 @@
 
             input.value = ''; 
             
-            // Lógica para reiniciar si la mesa está completamente vacía (v0.10.6)
             if (state.players.length === 0 && state.currentRoundNum > 1) {
                 state.rounds = [];
                 state.currentRoundNum = 1;
@@ -1622,7 +1628,6 @@
             const pName = state.players.find(p => p.id === playerId)?.name || 'este jugador';
             if(await customConfirm(`¿Seguro que deseas eliminar a ${pName}?`, 'Eliminar Jugador', true)) {
                 
-                // Si el teclado estaba abierto en ese jugador, lo cerramos para evitar errores
                 if (numpadPlayerId === playerId && document.getElementById('customNumpad').classList.contains('active')) {
                     closeNumpad();
                 }
