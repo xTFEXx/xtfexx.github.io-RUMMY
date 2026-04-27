@@ -760,7 +760,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.11.0</div>
+    <div id="watermark">xTFEXx - v0.11.1</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -1599,6 +1599,7 @@
 
             input.value = ''; 
             
+            // Lógica para reiniciar si la mesa está completamente vacía (v0.10.6)
             if (state.players.length === 0 && state.currentRoundNum > 1) {
                 state.rounds = [];
                 state.currentRoundNum = 1;
@@ -1628,6 +1629,7 @@
             const pName = state.players.find(p => p.id === playerId)?.name || 'este jugador';
             if(await customConfirm(`¿Seguro que deseas eliminar a ${pName}?`, 'Eliminar Jugador', true)) {
                 
+                // Si el teclado estaba abierto en ese jugador, lo cerramos para evitar errores
                 if (numpadPlayerId === playerId && document.getElementById('customNumpad').classList.contains('active')) {
                     closeNumpad();
                 }
