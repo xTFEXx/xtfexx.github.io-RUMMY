@@ -13,6 +13,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-512.png">
 
+    <!-- Script de precarga para evitar parpadeos de color -->
     <script>
         (function() {
             const savedTheme = localStorage.getItem('rummyProTheme') || 'default';
@@ -500,17 +501,20 @@
 </head>
 <body>
 
+    <!-- PANTALLA DE CARGA INICIAL (Evita parpadeos de color y estructuras) -->
     <div id="splashScreen">
         <img src="icon-512.png" alt="Cargando" onerror="this.style.display='none'">
         <h2 style="color: var(--primary); margin-top: 15px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px var(--primary-glow);">Rummy Pro</h2>
         <div class="splash-loader"></div>
     </div>
 
+    <!-- CAPAS DE ANIMACIÓN DE FONDO -->
     <div id="bg-aurora" class="bg-particles">
         <div class="stars-1"></div><div class="stars-2"></div><div class="stars-3"></div>
     </div>
     <div id="bg-eclipse" class="bg-particles">
-        </div>
+        <!-- Partículas removidas para Eclipse -->
+    </div>
     <div id="bg-deepsea" class="bg-particles">
         <div class="bubbles">
             <div class="bubble bubble-1"></div><div class="bubble bubble-2"></div>
@@ -567,10 +571,12 @@
         </div>
     </div>
 
+    <!-- CARTEL DE ESTADO VACÍO -->
     <div id="emptyStateMessage" style="display: none; text-align: center; color: var(--text-muted); margin-top: 40px; padding: 30px 20px; border: 2px dashed var(--border); border-radius: var(--radius); font-size: 1.2rem; font-weight: 800; background: rgba(0,0,0,0.2); transition: border-color 0.4s ease;">
         👤 Agrega jugadores para empezar la partida
     </div>
 
+    <!-- TABLERO PRINCIPAL -->
     <div id="gameBoard">
         <h3 style="margin-top: 10px; font-size: 1.2rem; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: 900;">Historial de Rondas</h3>
         <div class="table-container" id="historyTableContainer">
@@ -592,6 +598,7 @@
         <div style="margin-top: 25px;" id="actionBtnContainer"></div>
     </div>
 
+    <!-- MODALES -->
     <div id="confirmModal" class="modal">
         <div class="modal-content" style="text-align: center; max-width: 400px;">
             <h3 id="confirmTitle" style="margin-bottom: 15px; font-size: 1.6rem; font-weight: 900;"></h3>
@@ -676,6 +683,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIGURACIÓN Y TEMAS -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--primary); margin-bottom: 15px; text-align: center; font-size: 1.6rem; font-weight: 900; transition: color 0.4s ease;">⚙️ Configuración</h3>
@@ -738,6 +746,7 @@
         </div>
     </div>
 
+    <!-- TECLADO PERSONALIZADO PARA MÓVILES -->
     <div id="customNumpad" class="numpad-container">
         <div class="numpad-grid">
             <button class="numpad-btn" data-key="1">1</button>
@@ -760,7 +769,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.11.1</div>
+    <div id="watermark">xTFEXx - v0.11.4</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -794,6 +803,16 @@
         // MOTOR DE AUTO-GUARDADO SILENCIOSO
         function autoSave() {
             localStorage.setItem('rummyProAutoSave', JSON.stringify({ state, liveInputs }));
+        }
+
+        // --- ADAPTACIÓN DE PANTALLA MEDIANTE VISUAL VIEWPORT (Para teclados nativos) ---
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                if (!document.getElementById('customNumpad').classList.contains('active')) {
+                    const kbHeight = window.innerHeight - window.visualViewport.height;
+                    document.documentElement.style.setProperty('--kb-height', Math.max(0, kbHeight) + 'px');
+                }
+            });
         }
 
         // --- SISTEMA DE CENTRADO INTELIGENTE (SCROLL) ---
@@ -982,7 +1001,7 @@
                     closeNumpad();
                 } else {
                     let currentOrder = state.viewingRoundNum === state.currentRoundNum ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
-                    let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+                    let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum && (!p.leaveRound || p.leaveRound > state.viewingRoundNum));
                     
                     activePlayers.sort((a, b) => {
                         let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
@@ -1251,7 +1270,7 @@
 
         let editingRoundSnapshot = null;
         let lastAnnouncedTotals = {};
-        // Se inicializa con property adjustments
+        // Se inicializa con property adjustments y leaveRound
         let state = { config: { win: 1000, lock: 500 }, players: [], rounds: [], currentRoundNum: 1, viewingRoundNum: 1, playerOrder: [], isGameOver: false };
         let liveInputs = { scores: {}, cuts: {}, adjustments: {} };
         let pendingWinnerAction = { mode: '', roundId: null };
@@ -1303,7 +1322,8 @@
 
         function checkIfGameOver() {
             let over = false;
-            state.players.forEach(p => {
+            let activePlayers = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum);
+            activePlayers.forEach(p => {
                 let total = calculateTotal(p.id, state.currentRoundNum);
                 if (total >= state.config.win) over = true;
             });
@@ -1359,6 +1379,80 @@
             if (el.value !== val) { el.value = val; }
         }
 
+        async function addPlayer() {
+            const input = document.getElementById('newPlayerInput');
+            const name = formatName(input.value);
+            if (!name) return;
+
+            // Prevent adding if there's an ACTIVE player with the same name
+            const activeMatch = state.players.find(p => p.name.toLowerCase() === name.toLowerCase() && (!p.leaveRound || p.leaveRound > state.currentRoundNum));
+            if (activeMatch) {
+                showToast("Ya existe un jugador activo con ese nombre.", "danger");
+                return;
+            }
+
+            // Check if there is a DELETED player with the same name
+            const deletedMatch = state.players.find(p => p.name.toLowerCase() === name.toLowerCase() && p.leaveRound && p.leaveRound <= state.currentRoundNum);
+
+            input.value = ''; 
+            
+            if (deletedMatch) {
+                const confirmed = await customConfirm(`El jugador "${deletedMatch.name}" fue eliminado anteriormente. ¿Deseas reincorporarlo a la partida con los puntos que tenía?`, "Reincorporar Jugador", false);
+                if (confirmed) {
+                    const leftAt = deletedMatch.leaveRound;
+                    deletedMatch.leaveRound = null;
+                    
+                    // Fill missed rounds with "-" to indicate absence
+                    state.rounds.forEach(r => {
+                        if (r.id >= leftAt && r.id < state.currentRoundNum) {
+                            r.scores[deletedMatch.id] = "-";
+                        }
+                    });
+                    
+                    state.playerOrder.push(deletedMatch.id);
+                    
+                    if(state.viewingRoundNum !== state.currentRoundNum) {
+                        undoRoundChanges(true); 
+                        state.viewingRoundNum = state.currentRoundNum;
+                    }
+                    
+                    renderApp(false, '');
+                    syncAnnouncedTotals();
+                    setTimeout(() => { const inp = document.getElementById('newPlayerInput'); if (inp) inp.focus(); }, 50);
+                }
+                return; // Stop here whether they confirmed or cancelled
+            }
+            
+            // Lógica para reiniciar si la mesa está completamente vacía (v0.10.6)
+            const activeCount = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum).length;
+            if (activeCount === 0 && state.currentRoundNum > 1) {
+                state.rounds = [];
+                state.players = [];
+                state.playerOrder = [];
+                state.currentRoundNum = 1;
+                state.viewingRoundNum = 1;
+                state.isGameOver = false;
+                liveInputs = { scores: {}, cuts: {}, adjustments: {} };
+                editingRoundSnapshot = null;
+                showToast("Mesa vacía detectada. Partida reiniciada a la Ronda 1.", "primary");
+            }
+            
+            let activeForMin = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum);
+            let minScore = activeForMin.length > 0 ? Math.min(...activeForMin.map(p => calculateTotal(p.id, state.currentRoundNum))) : 0;
+            let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore, leaveRound: null };
+            state.players.push(newPlayer);
+            state.playerOrder.push(newPlayer.id); 
+            
+            if(state.viewingRoundNum !== state.currentRoundNum) {
+                undoRoundChanges(true); 
+                state.viewingRoundNum = state.currentRoundNum;
+            }
+            
+            renderApp(false, '');
+            syncAnnouncedTotals();
+            setTimeout(() => { const inp = document.getElementById('newPlayerInput'); if (inp) inp.focus(); }, 50);
+        }
+
         function windowAddPlayerKey(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -1377,7 +1471,7 @@
                 
                 const isCurrent = state.viewingRoundNum === state.currentRoundNum;
                 let currentOrder = isCurrent ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
-                let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+                let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum && (!p.leaveRound || p.leaveRound > state.viewingRoundNum));
                 
                 activePlayers.sort((a, b) => {
                     let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
@@ -1458,9 +1552,15 @@
 
         function resetGame() {
             animateGrid('backward', () => {
-                state.rounds = []; state.currentRoundNum = 1; state.viewingRoundNum = 1; state.isGameOver = false;
+                state.players = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum);
+                state.playerOrder = state.playerOrder.filter(id => state.players.some(p => p.id === id));
+                
+                state.rounds = []; 
+                state.currentRoundNum = 1; 
+                state.viewingRoundNum = 1; 
+                state.isGameOver = false;
                 liveInputs = { scores: {}, cuts: {}, adjustments: {} };
-                state.players.forEach(p => { p.baseScore = 0; p.joinRound = 1; });
+                state.players.forEach(p => { p.baseScore = 0; p.joinRound = 1; p.leaveRound = null; });
                 editingRoundSnapshot = null;
                 renderApp(false, 'backward');
                 syncAnnouncedTotals();
@@ -1470,6 +1570,8 @@
         function animateGrid(direction, callback) {
             const grid = document.getElementById('playersGrid');
             if (state.players.length === 0) { callback(); return; }
+            const currentHeight = grid.offsetHeight;
+            if (currentHeight > 0) grid.style.minHeight = currentHeight + 'px';
             
             grid.innerHTML = '';
             grid.className = 'grid'; 
@@ -1477,9 +1579,11 @@
             
             if (direction) grid.classList.add(`slide-${direction}`);
             
+            setTimeout(() => { grid.style.minHeight = ''; }, 50); 
+            
             setTimeout(() => { grid.classList.remove(`slide-${direction}`); }, 850); 
             
-            callback();
+            if(callback) callback();
         }
 
         function enableCustomDrag() {
@@ -1528,19 +1632,42 @@
             list.addEventListener('mousedown', onStart); list.addEventListener('touchstart', onStart, {passive: false});
         }
 
-        function updateOrderNumbers() { document.querySelectorAll('#orderList .drag-item').forEach((item, index) => { item.querySelector('.order-num').innerText = (index + 1) + '.'; }); }
+        function updateOrderNumbers() { 
+            const items = document.querySelectorAll('#orderList .drag-item');
+            const numPlayers = items.length;
+            const dealer = (state.viewingRoundNum - 1) % Math.max(1, numPlayers);
+            const mano = (dealer + 1) % Math.max(1, numPlayers);
+            const cutter = (dealer - 1 + numPlayers) % Math.max(1, numPlayers);
+
+            items.forEach((item, index) => { 
+                item.querySelector('.order-num').innerText = (index + 1) + '.'; 
+                
+                let role = '';
+                if (numPlayers > 1) {
+                    if (index === dealer) role = '🎲 Reparte';
+                    else if (index === cutter && index === mano) role = '✂️ Corta y ✋ Mano';
+                    else if (index === cutter) role = '✂️ Corta';
+                    else if (index === mano) role = '✋ Mano';
+                }
+                const roleSpan = item.querySelector('.order-role');
+                if (roleSpan) roleSpan.innerText = role;
+            }); 
+        }
 
         function openOrderModal() {
-            if (state.players.length < 2) return showToast("Se necesitan al menos 2 jugadores para ordenarlos.", "warning");
+            let activePlayers = (state.playerOrder || state.players.map(p => p.id)).map(id => state.players.find(p => p.id === id)).filter(p => p && p.joinRound <= state.currentRoundNum && (!p.leaveRound || p.leaveRound > state.currentRoundNum));
+            if (activePlayers.length < 2) return showToast("Se necesitan al menos 2 jugadores para ordenarlos.", "warning");
+            
             const list = document.getElementById('orderList'); list.innerHTML = '';
-            let currentOrder = state.playerOrder || state.players.map(p => p.id);
-            let activePlayers = currentOrder.map(id => state.players.find(p => p.id === id)).filter(p => p && p.joinRound <= state.currentRoundNum);
+            
             activePlayers.forEach((p, idx) => {
                 let div = document.createElement('div'); div.className = 'drag-item'; div.dataset.id = p.id;
-                div.innerHTML = `<span class="drag-handle" title="Agarra y arrastra">☰</span><span class="order-num">${idx + 1}.</span><span class="text-truncate" style="flex:1; font-weight:bold; font-size:1.2rem; text-align:center; padding-right:35px;">${p.name}</span>`;
+                div.innerHTML = `<span class="drag-handle" title="Agarra y arrastra">☰</span><span class="order-num">${idx + 1}.</span><div style="flex:1; display:flex; flex-direction:column; align-items:flex-start; padding-left:5px;"><span class="text-truncate" style="font-weight:bold; font-size:1.1rem;">${p.name}</span><span class="order-role" style="font-size:0.75rem; color:var(--warning); font-weight:800;"></span></div>`;
                 list.appendChild(div);
             });
-            enableCustomDrag(); openModal('orderModal');
+            enableCustomDrag(); 
+            updateOrderNumbers();
+            openModal('orderModal');
         }
 
         function confirmOrder() {
@@ -1577,55 +1704,39 @@
             return total;
         }
 
-        function addPlayer() {
-            const input = document.getElementById('newPlayerInput');
-            const name = formatName(input.value);
-            if (!name) return;
-
-            if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-                showToast("Ya existe un jugador con ese nombre.", "danger");
-                return;
-            }
-
-            input.value = ''; 
-            
-            // Lógica para reiniciar si la mesa está completamente vacía (v0.10.6)
-            if (state.players.length === 0 && state.currentRoundNum > 1) {
-                state.rounds = [];
-                state.currentRoundNum = 1;
-                state.viewingRoundNum = 1;
-                state.isGameOver = false;
-                liveInputs = { scores: {}, cuts: {}, adjustments: {} };
-                editingRoundSnapshot = null;
-                showToast("Mesa vacía detectada. Partida reiniciada a la Ronda 1.", "primary");
-            }
-            
-            let minScore = state.players.length > 0 ? Math.min(...state.players.map(p => calculateTotal(p.id, state.currentRoundNum))) : 0;
-            let newPlayer = { id: generateId(), name, joinRound: state.currentRoundNum, baseScore: minScore };
-            state.players.push(newPlayer);
-            state.playerOrder.push(newPlayer.id); 
-            
-            if(state.viewingRoundNum !== state.currentRoundNum) {
-                undoRoundChanges(true); 
-                state.viewingRoundNum = state.currentRoundNum;
-            }
-            
-            renderApp(false, '');
-            syncAnnouncedTotals();
-            setTimeout(() => { const inp = document.getElementById('newPlayerInput'); if (inp) inp.focus(); }, 50);
-        }
-
         async function removePlayer(playerId) {
             const pName = state.players.find(p => p.id === playerId)?.name || 'este jugador';
             if(await customConfirm(`¿Seguro que deseas eliminar a ${pName}?`, 'Eliminar Jugador', true)) {
                 
-                // Si el teclado estaba abierto en ese jugador, lo cerramos para evitar errores
                 if (numpadPlayerId === playerId && document.getElementById('customNumpad').classList.contains('active')) {
                     closeNumpad();
                 }
 
-                state.players = state.players.filter(p => p.id !== playerId);
-                state.playerOrder = state.playerOrder.filter(id => id !== playerId);
+                const p = state.players.find(x => x.id === playerId);
+                if (p) {
+                    if (p.joinRound === state.viewingRoundNum && state.viewingRoundNum === state.currentRoundNum) {
+                        state.players = state.players.filter(x => x.id !== playerId);
+                        state.playerOrder = state.playerOrder.filter(id => id !== playerId);
+                    } else {
+                        p.leaveRound = state.viewingRoundNum;
+                        state.playerOrder = state.playerOrder.filter(id => id !== playerId);
+                    }
+                }
+                
+                // --- HARD RESET AUTOMÁTICO SI LA MESA QUEDA VACÍA (v0.11.4) ---
+                const activeCount = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum).length;
+                if (activeCount === 0) {
+                    state.rounds = [];
+                    state.players = [];
+                    state.playerOrder = [];
+                    state.currentRoundNum = 1;
+                    state.viewingRoundNum = 1;
+                    state.isGameOver = false;
+                    liveInputs = { scores: {}, cuts: {}, adjustments: {} };
+                    editingRoundSnapshot = null;
+                    showToast("Mesa vaciada. Partida reiniciada.", "primary");
+                }
+                
                 renderApp(false, ''); 
                 syncAnnouncedTotals();
             }
@@ -1730,6 +1841,12 @@
                     state.rounds.forEach((r, idx) => r.id = idx + 1);
                     state.currentRoundNum = state.rounds.length + 1;
                     state.viewingRoundNum = state.currentRoundNum;
+                    
+                    state.players.forEach(p => {
+                        if (p.joinRound > roundId) p.joinRound--;
+                        if (p.leaveRound && p.leaveRound > roundId) p.leaveRound--;
+                    });
+                    
                     editingRoundSnapshot = null;
                     state.isGameOver = checkIfGameOver();
                     renderApp(false, 'backward');
@@ -1739,7 +1856,7 @@
         }
 
         function commitRound() {
-            const activePlayers = state.players.filter(p => p.joinRound <= state.currentRoundNum);
+            const activePlayers = state.players.filter(p => p.joinRound <= state.currentRoundNum && (!p.leaveRound || p.leaveRound > state.currentRoundNum));
             if(activePlayers.length < 2) return showToast("Mínimo 2 jugadores para jugar.", "warning");
 
             let incomplete = activePlayers.filter(p => liveInputs.scores[p.id] === undefined || liveInputs.scores[p.id] === "-" || isNaN(liveInputs.scores[p.id]));
@@ -1832,7 +1949,7 @@
 
         function renderWinnerModalUI() {
             let currentOrder = state.viewingRoundNum === state.currentRoundNum ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
-            const activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+            const activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum && (!p.leaveRound || p.leaveRound > state.viewingRoundNum));
             
             activePlayers.sort((a, b) => {
                 let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
@@ -1935,13 +2052,14 @@
         }
 
         function evaluateGameStatus(showAdvanceRoundMessage) {
+            let activePlayers = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum);
             let newTotals = {};
-            state.players.forEach(p => newTotals[p.id] = calculateTotal(p.id, state.currentRoundNum));
+            activePlayers.forEach(p => newTotals[p.id] = calculateTotal(p.id, state.currentRoundNum));
 
             let newlyLocked = [];
             let newlyUnlocked = [];
 
-            state.players.forEach(p => {
+            activePlayers.forEach(p => {
                 let oldT = lastAnnouncedTotals[p.id] || 0;
                 let wasLocked = oldT >= state.config.lock;
                 let isLocked = newTotals[p.id] >= state.config.lock;
@@ -1950,7 +2068,7 @@
                 if (wasLocked && !isLocked) newlyUnlocked.push(p.name);
             });
 
-            let winners = state.players.filter(p => newTotals[p.id] >= state.config.win);
+            let winners = activePlayers.filter(p => newTotals[p.id] >= state.config.win);
             winners.sort((a, b) => newTotals[b.id] - newTotals[a.id]);
 
             if (winners.length > 0) {
@@ -2099,7 +2217,7 @@
             const cutDisabledStyle = isCurrent && state.isGameOver ? 'pointer-events: none; opacity: 0.5;' : '';
 
             let currentOrder = isCurrent ? state.playerOrder : (state.rounds.find(x => x.id === state.viewingRoundNum)?.playerOrder || state.playerOrder);
-            let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum);
+            let activePlayers = state.players.filter(p => p.joinRound <= state.viewingRoundNum && (!p.leaveRound || p.leaveRound > state.viewingRoundNum));
             
             activePlayers.sort((a, b) => {
                 let idxA = currentOrder.indexOf(a.id); let idxB = currentOrder.indexOf(b.id);
@@ -2156,7 +2274,7 @@
                         <div class="card-header">
                             <span class="card-num">#${idx + 1}</span>
                             <input tabindex="-1" type="text" class="ghost text-truncate card-name" value="${p.name}" onchange="changePlayerName('${p.id}',this.value)" onfocus="scrollIntoViewCenter(this, false)">
-                            <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')">X</button>
+                            <button tabindex="-1" class="danger action-small card-del" onclick="removePlayer('${p.id}')" ${!isCurrent ? 'style="display:none;"' : ''}>X</button>
                         </div>
                         <input tabindex="-1" type="text" pattern="[0-9\-]*" inputmode="none" class="total-score-input custom-keyboard-input" value="${tot}" onchange="promptOverrideTotal('${p.id}', this)" onkeydown="blockInvalidChars(event); if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); this.blur(); closeNumpad(); }" oninput="sanitizeScoreInput(this)" onfocus="openNumpad(this, '${p.id}', 'total')" onblur="closeNumpadDelay()">
                         ${roleHtml}
@@ -2275,7 +2393,9 @@
             state.rounds.forEach(r => {
                 h += `<tr class="${r.id === state.viewingRoundNum ? 'highlight-row' : ''}"><td onclick="goToRound(${r.id})">R${r.id} ✏️</td>`;
                 tablePlayers.forEach(p => {
-                    if (p.joinRound > r.id) { h += `<td>-</td>`; } else {
+                    if (p.joinRound > r.id || (p.leaveRound && p.leaveRound <= r.id)) { 
+                        h += `<td><span style="opacity:0.3">-</span></td>`; 
+                    } else {
                         const pts = r.scores[p.id] !== undefined ? r.scores[p.id] : 0;
                         const cutStr = (r.cuts && r.cuts[p.id]) ? ` <small style="color:var(--warning); font-weight:bold;">(+50)</small>` : '';
                         const winStr = (r.winner && r.winner.id === p.id) ? `<div style="color:var(--success); font-size:0.8rem; font-weight:900; margin-top:3px;">🏆 +${r.winner.points}</div>` : '';
@@ -2287,10 +2407,14 @@
             });
             h += `</tbody><tfoot><tr style="background: rgba(0,0,0,0.6); font-weight:900; font-size:1.15rem;"><td style="color:var(--primary); transition: color 0.4s ease;">TOTAL</td>`;
             tablePlayers.forEach(p => {
-                const tot = calculateTotal(p.id, state.currentRoundNum);
+                const finalRoundForPlayer = p.leaveRound ? p.leaveRound - 1 : state.currentRoundNum;
+                const tot = calculateTotal(p.id, finalRoundForPlayer);
+                const isCurrentlyActive = (!p.leaveRound || p.leaveRound > state.currentRoundNum);
+                
                 let col = '#ffffff';
                 if(tot >= state.config.win) col = 'var(--success)'; else if(tot >= state.config.lock) col = 'var(--danger)';
-                h += `<td style="color:${col}; text-shadow: 0 0 3px ${col !== '#ffffff' ? col : 'transparent'};">${tot}</td>`;
+                
+                h += `<td style="color:${col}; opacity: ${isCurrentlyActive ? '1' : '0.5'}; text-shadow: 0 0 3px ${col !== '#ffffff' ? col : 'transparent'};">${tot}</td>`;
             });
             h += `</tr></tfoot>`;
             table.innerHTML = h;
@@ -2326,8 +2450,11 @@
                     if(!liveInputs.adjustments) liveInputs.adjustments = {};
                     editingRoundSnapshot = null; closeModal('loadModal'); state.viewingRoundNum = state.currentRoundNum; 
                     
-                    let newTotals = {}; state.players.forEach(p => newTotals[p.id] = calculateTotal(p.id, state.currentRoundNum));
-                    let winners = state.players.filter(p => newTotals[p.id] >= state.config.win);
+                    let newTotals = {}; 
+                    let activePlayers = state.players.filter(p => !p.leaveRound || p.leaveRound > state.currentRoundNum);
+                    activePlayers.forEach(p => newTotals[p.id] = calculateTotal(p.id, state.currentRoundNum));
+                    
+                    let winners = activePlayers.filter(p => newTotals[p.id] >= state.config.win);
                     state.isGameOver = winners.length > 0;
                     state.viewingRoundNum = state.isGameOver ? Math.max(1, state.currentRoundNum - 1) : state.currentRoundNum;
                     renderApp(false, ''); syncAnnouncedTotals(); showToast("Partida cargada.", "success"); 
