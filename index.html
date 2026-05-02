@@ -254,14 +254,18 @@
 
         body { 
             background: transparent; color: var(--text-main); 
-            min-height: 100vh; padding: max(15px, env(safe-area-inset-top)) 15px 15px 15px; 
-            padding-bottom: calc(40px + var(--kb-height) + env(safe-area-inset-bottom)); 
+            min-height: 100vh; padding: max(15px, env(safe-area-inset-top)) 15px max(15px, env(safe-area-inset-bottom)) 15px; 
             overflow-x: hidden; position: relative; 
             transition: padding-bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); 
             -webkit-user-select: none; -ms-user-select: none; user-select: none; 
             -webkit-touch-callout: none; 
         }
         
+        /* Modificador dinámico SOLO activo cuando el teclado interno se abre */
+        body.numpad-active-padding {
+            padding-bottom: calc(max(15px, env(safe-area-inset-bottom)) + var(--kb-height) + 20px) !important;
+        }
+
         body.no-scroll { overflow: hidden; }
         
         * { scrollbar-width: none; } 
@@ -443,7 +447,8 @@
         .theme-option.active { border-width: 3px; transform: scale(0.95); box-shadow: 0 0 15px var(--primary-glow); }
         .theme-color-preview { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); }
 
-        #watermark { position: absolute; bottom: 15px; right: 15px; color: rgba(255, 255, 255, 0.08); font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; pointer-events: none; z-index: 1000; user-select: none; text-transform: none; transition: bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        /* MARCA DE AGUA ANCLADA AL FONDO */
+        #watermark { position: fixed; bottom: 15px; right: 15px; color: rgba(255, 255, 255, 0.08); font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; pointer-events: none; z-index: 0; user-select: none; text-transform: none; transition: bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
         .drag-item { display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); user-select: none; -webkit-user-select: none; transition: background 0.15s ease; }
         .drag-item.dragging { opacity: 0.15; border: 1px dashed var(--primary); background: transparent; }
@@ -499,7 +504,7 @@
         .numpad-enter { background: var(--success); color: white; border: none; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; grid-column: span 3; }
     </style>
 </head>
-<body>
+<body id="appBody">
 
     <!-- PANTALLA DE CARGA INICIAL (Evita parpadeos de color y estructuras) -->
     <div id="splashScreen">
@@ -769,7 +774,7 @@
         </div>
     </div>
 
-    <div id="watermark">xTFEXx - v0.11.4</div>
+    <div id="watermark">xTFEXx - v0.11.5a</div>
 
     <script>
         // --- SISTEMA DE TEMAS VISUALES ---
@@ -950,6 +955,7 @@
             if (!numpad.classList.contains('active')) {
                 history.pushState({ui: 'numpad'}, "");
                 numpad.classList.add('active');
+                document.getElementById('appBody').classList.add('numpad-active-padding');
             }
             
             setTimeout(() => {
@@ -971,6 +977,7 @@
         function closeNumpadUI() {
             const numpad = document.getElementById('customNumpad');
             numpad.classList.remove('active');
+            document.getElementById('appBody').classList.remove('numpad-active-padding');
             document.documentElement.style.setProperty('--kb-height', '0px'); 
             
             if(numpadActiveInput) {
